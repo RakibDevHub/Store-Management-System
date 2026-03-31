@@ -30,6 +30,10 @@
         .header h1 {
             font-size: 20px;
         }
+
+        .header h1 a{
+            margin: 0;
+        }
         
         .header a {
             color: white;
@@ -149,10 +153,10 @@
 </head>
 <body>
     <div class="header">
-        <h1>🏪 Store Management System</h1>
+        <h1><a href="/">🏪 Store Management System</a></h1>
         <div>
             Welcome, <?php echo $_SESSION['user_first_name'] . ' ' . $_SESSION['user_last_name']; ?> | 
-            <a href="../logout.php">Logout</a>
+            <a href="/logout.php">Logout</a>
         </div>
     </div>
     <div class="container"></div>
