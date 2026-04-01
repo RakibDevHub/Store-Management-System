@@ -1,11 +1,72 @@
 <?php
 
+// Get database connection
+// function getDB() {
+//     require_once __DIR__ . '/../config/database.php';
+//     global $conn;
+//     return $conn;
+// }
+
+// Sanitize input data
 function sanitize($data)
 {
     global $conn;
     return mysqli_real_escape_string($conn, htmlspecialchars(trim($data)));
 }
 
+// Display alert message
+function showMessage($message, $type = 'success')
+{
+    $class = ($type == 'success') ? 'alert-success' : 'alert-danger';
+    echo "<div class='alert $class' style='padding: 10px; margin-bottom: 15px; border-radius: 5px;'>$message</div>";
+}
+
+// Redirect to another page
+function redirect($url)
+{
+    header("Location: $url");
+    exit();
+}
+
+// Check if user is logged in
+function isLoggedIn()
+{
+    return isset($_SESSION['user_id']);
+}
+
+// Check if user is admin
+function isAdmin()
+{
+    return isset($_SESSION['role']) && $_SESSION['role'] == 'admin';
+}
+
+// Get user's branch ID
+function getUserBranch()
+{
+    return isset($_SESSION['branch_id']) ? $_SESSION['branch_id'] : null;
+}
+
+// Log activity
+function logActivity($user_id, $action, $description)
+{
+    require_once __DIR__ . '/../config/database.php';
+    global $conn;
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $user_agent = $_SERVER['HTTP_USER_AGENT'];
+
+    $sql = "INSERT INTO activity_logs (user_id, action, description, ip_address, user_agent) 
+            VALUES (?, ?, ?, ?, ?)";
+    if ($conn) {
+        $stmt = $conn->prepare($sql);
+        if ($stmt) {
+            $stmt->bind_param("issss", $user_id, $action, $description, $ip, $user_agent);
+            $stmt->execute();
+            $stmt->close();
+        }
+    }
+}
+
+// Get categories for dropdown
 function getCategories()
 {
     global $conn;
@@ -13,23 +74,40 @@ function getCategories()
     return $result;
 }
 
-function getProducts()
+// Get branches for dropdown
+function getBranches()
 {
     global $conn;
-    $result = $conn->query("SELECT p.*, c.category_name FROM products p 
-                            LEFT JOIN categories c ON p.product_category = c.category_id 
-                            ORDER BY p.product_id DESC");
+    $result = $conn->query("SELECT * FROM branches ORDER BY branch_name");
     return $result;
 }
 
-function showMessage($message, $type = 'success')
+// Get products for a specific branch (for staff)
+function getBranchProducts($branch_id)
 {
-    $class = ($type == 'success') ? 'alert-success' : 'alert-danger';
-    echo "<div class='$class' style='padding: 10px; margin-bottom: 15px; border-radius: 5px;'>$message</div>";
+    global $conn;
+    $sql = "SELECT p.*, c.category_name 
+            FROM products p
+            LEFT JOIN categories c ON p.category_id = c.category_id
+            WHERE p.branch_id = ?
+            ORDER BY p.product_name";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $branch_id);
+    $stmt->execute();
+    return $stmt->get_result();
 }
 
-function redirect($url)
+// Get categories that have products in a specific branch
+function getBranchCategories($branch_id)
 {
-    header("Location: $url");
-    exit();
+    global $conn;
+    $sql = "SELECT DISTINCT c.* 
+            FROM categories c
+            INNER JOIN products p ON p.category_id = c.category_id
+            WHERE p.branch_id = ?
+            ORDER BY c.category_name";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $branch_id);
+    $stmt->execute();
+    return $stmt->get_result();
 }

@@ -1,4 +1,6 @@
 <?php
+// includes/header.php
+// Make sure session is started before including this
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -18,27 +20,28 @@
             background: #f4f4f4;
         }
         
-        .header {
-            background: #333;
+        .navbar {
+            background: #2c3e50;
             color: white;
             padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
-        .header h1 {
+        .navbar h1 {
             font-size: 20px;
         }
-
-        .header h1 a{
-            margin: 0;
-        }
         
-        .header a {
+        .navbar a {
             color: white;
             text-decoration: none;
-            margin-left: 15px;
+            margin-left: 20px;
+        }
+        
+        .navbar a:hover {
+            text-decoration: underline;
         }
         
         .container {
@@ -49,39 +52,45 @@
         
         .card {
             background: white;
-            padding: 20px;
             border-radius: 5px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            padding: 20px;
             margin-bottom: 20px;
         }
         
         .card-title {
-            margin-bottom: 15px;
+            border-bottom: 2px solid #2c3e50;
             padding-bottom: 10px;
-            border-bottom: 2px solid #333;
+            margin-bottom: 20px;
+            color: #2c3e50;
         }
         
         .btn {
             display: inline-block;
             padding: 8px 15px;
-            background: #333;
+            background: #2c3e50;
             color: white;
             text-decoration: none;
             border-radius: 3px;
             border: none;
             cursor: pointer;
+            font-size: 14px;
         }
         
         .btn-primary {
-            background: #007bff;
-        }
-        
-        .btn-danger {
-            background: #dc3545;
+            background: #3498db;
         }
         
         .btn-success {
-            background: #28a745;
+            background: #27ae60;
+        }
+        
+        .btn-danger {
+            background: #e74c3c;
+        }
+        
+        .btn-warning {
+            background: #f39c12;
         }
         
         table {
@@ -90,13 +99,18 @@
         }
         
         th, td {
-            padding: 10px;
+            padding: 12px;
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
         
         th {
-            background: #f4f4f4;
+            background: #ecf0f1;
+            font-weight: bold;
+        }
+        
+        tr:hover {
+            background: #f9f9f9;
         }
         
         .form-group {
@@ -107,6 +121,7 @@
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
+            color: #333;
         }
         
         .form-control {
@@ -114,6 +129,11 @@
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 3px;
+            font-size: 14px;
+        }
+        
+        select.form-control {
+            cursor: pointer;
         }
         
         .alert-success {
@@ -128,9 +148,9 @@
             border: 1px solid #f5c6cb;
         }
         
-        .menu {
+        .grid-3 {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             margin-top: 20px;
         }
@@ -142,21 +162,74 @@
             text-decoration: none;
             color: #333;
             border-radius: 5px;
-            transition: transform 0.3s;
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: block;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
         .menu-item:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .badge-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .badge-warning {
+            background: #f39c12;
+            color: white;
+        }
+        
+        .badge-success {
+            background: #27ae60;
+            color: white;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            color: #7f8c8d;
+            border-top: 1px solid #ddd;
+        }
+        
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .navbar div {
+                margin-top: 10px;
+            }
+            
+            th, td {
+                padding: 8px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1><a href="/">🏪 Store Management System</a></h1>
+    <div class="navbar">
+        <h1>🏪 Store Management System</h1>
         <div>
-            Welcome, <?php echo $_SESSION['user_first_name'] . ' ' . $_SESSION['user_last_name']; ?> | 
-            <a href="/logout.php">Logout</a>
+            Welcome, <?php echo $_SESSION['first_name'] . ' ' . $_SESSION['last_name']; ?> 
+            (<?php echo ucfirst($_SESSION['role']); ?>)
+            <?php if($_SESSION['branch_name']): ?>
+                | Branch: <?php echo $_SESSION['branch_name']; ?>
+            <?php endif; ?>
+            | <a href="/logout.php">Logout</a>
         </div>
     </div>
-    <div class="container"></div>
+    <div class="container">

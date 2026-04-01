@@ -14,11 +14,21 @@ class Database {
             die("Connection failed: " . $this->conn->connect_error);
         }
         
+        // Set charset to UTF-8
         $this->conn->set_charset("utf8");
     }
     
     public function getConnection() {
         return $this->conn;
     }
+    
+    public function close() {
+        if ($this->conn) {
+            $this->conn->close();
+        }
+    }
 }
+
+$db = new Database();
+$conn = $db->getConnection();
 ?>
