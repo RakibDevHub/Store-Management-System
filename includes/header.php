@@ -1,235 +1,191 @@
-<?php
-// includes/header.php
-// Make sure session is started before including this
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Store Management System</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
+            background: #f8f9fa;
         }
         
-        .navbar {
+        .navbar-brand {
+            font-weight: bold;
+        }
+        
+        .sidebar {
+            min-height: calc(100vh - 56px);
             background: #2c3e50;
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
-        .navbar h1 {
-            font-size: 20px;
+        .sidebar .nav-link {
+            color: #ecf0f1;
+            padding: 10px 20px;
+            transition: all 0.3s;
         }
         
-        .navbar a {
-            color: white;
-            text-decoration: none;
-            margin-left: 20px;
+        .sidebar .nav-link:hover {
+            background: #34495e;
         }
         
-        .navbar a:hover {
-            text-decoration: underline;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 20px auto;
-            padding: 0 20px;
-        }
-        
-        .card {
-            background: white;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .card-title {
-            border-bottom: 2px solid #2c3e50;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            color: #2c3e50;
-        }
-        
-        .btn {
-            display: inline-block;
-            padding: 8px 15px;
-            background: #2c3e50;
-            color: white;
-            text-decoration: none;
-            border-radius: 3px;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        
-        .btn-primary {
+        .sidebar .nav-link.active {
             background: #3498db;
         }
         
-        .btn-success {
-            background: #27ae60;
+        .sidebar .nav-link i {
+            margin-right: 10px;
         }
         
-        .btn-danger {
-            background: #e74c3c;
-        }
-        
-        .btn-warning {
-            background: #f39c12;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        th {
-            background: #ecf0f1;
-            font-weight: bold;
-        }
-        
-        tr:hover {
-            background: #f9f9f9;
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .form-control {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-            font-size: 14px;
-        }
-        
-        select.form-control {
-            cursor: pointer;
-        }
-        
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .alert-danger {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .grid-3 {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-        
-        .menu-item {
-            background: white;
+        .main-content {
             padding: 20px;
-            text-align: center;
-            text-decoration: none;
-            color: #333;
-            border-radius: 5px;
-            transition: transform 0.3s, box-shadow 0.3s;
-            display: block;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
-        .menu-item:hover {
+        .stats-card {
+            border-radius: 10px;
+            transition: transform 0.3s;
+        }
+        
+        .stats-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         
-        .badge {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 3px;
-            font-size: 12px;
-            font-weight: bold;
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
         }
         
-        .badge-danger {
-            background: #e74c3c;
-            color: white;
-        }
-        
-        .badge-warning {
-            background: #f39c12;
-            color: white;
-        }
-        
-        .badge-success {
-            background: #27ae60;
-            color: white;
+        .btn-action {
+            padding: 5px 10px;
+            margin: 0 2px;
         }
         
         footer {
+            background: white;
+            padding: 15px;
             text-align: center;
-            margin-top: 40px;
-            padding: 20px;
-            color: #7f8c8d;
-            border-top: 1px solid #ddd;
+            border-top: 1px solid #dee2e6;
+            margin-top: 30px;
+        }
+        
+        .alert {
+            border-radius: 8px;
         }
         
         @media (max-width: 768px) {
-            .navbar {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            .navbar div {
-                margin-top: 10px;
-            }
-            
-            th, td {
-                padding: 8px;
-                font-size: 14px;
+            .sidebar {
+                min-height: auto;
             }
         }
     </style>
 </head>
 <body>
-    <div class="navbar">
-        <h1>🏪 Store Management System</h1>
-        <div>
-            Welcome, <?php echo $_SESSION['first_name'] . ' ' . $_SESSION['last_name']; ?> 
-            (<?php echo ucfirst($_SESSION['role']); ?>)
-            <?php if($_SESSION['branch_name']): ?>
-                | Branch: <?php echo $_SESSION['branch_name']; ?>
-            <?php endif; ?>
-            | <a href="/logout.php">Logout</a>
+
+<!-- Top Navigation Bar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="index.php">
+            <i class="fas fa-store me-2"></i>Store Management System
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle"></i> <?php echo $_SESSION['first_name'] . ' ' . $_SESSION['last_name']; ?>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#">
+                            <i class="fas fa-user"></i> Profile
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="../logout.php">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a></li>
+                    </ul>
+                </li>
+            </ul>
         </div>
     </div>
-    <div class="container">
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <nav class="col-md-2 d-md-block sidebar p-0">
+            <div class="position-sticky pt-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.php">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    
+                    <?php if(isAdmin()): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="../admin/branches/list.php">
+                                <i class="fas fa-building"></i> Branches
+                            </a>
+                        </li>
+                    <?php endif; ?>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="../admin/categories/list.php">
+                            <i class="fas fa-tags"></i> Categories
+                        </a>
+                    </li>
+                    
+                    <?php if(isAdmin()): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="../admin/products/list.php">
+                                <i class="fas fa-boxes"></i> All Products
+                            </a>
+                        </li>
+                    <?php else: ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="../staff/products/list.php">
+                                <i class="fas fa-box"></i> Products
+                            </a>
+                        </li>
+                    <?php endif; ?>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="../sales/add.php">
+                            <i class="fas fa-shopping-cart"></i> Record Sale
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="../sales/list.php">
+                            <i class="fas fa-list"></i> Sales List
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="../reports/sales_report.php">
+                            <i class="fas fa-chart-line"></i> Sales Report
+                        </a>
+                    </li>
+                    
+                    <?php if(isAdmin()): ?>
+                        <li class="nav-item">
+                            <a class="nav-link" href="../admin/users/list.php">
+                                <i class="fas fa-users"></i> Users
+                            </a>
+                        </li>
+                    <?php endif; ?>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="col-md-10 ms-sm-auto px-md-4 main-content">

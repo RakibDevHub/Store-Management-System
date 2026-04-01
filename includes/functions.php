@@ -17,10 +17,12 @@ function sanitize($data)
 // Display alert message
 function showMessage($message, $type = 'success')
 {
-    $class = ($type == 'success') ? 'alert-success' : 'alert-danger';
-    echo "<div class='alert $class' style='padding: 10px; margin-bottom: 15px; border-radius: 5px;'>$message</div>";
+    $icon = ($type == 'success') ? 'fa-check-circle' : 'fa-exclamation-triangle';
+    echo "<div class='alert alert-$type alert-dismissible fade show' role='alert'>
+            <i class='fas $icon me-2'></i>$message
+            <button type='button' class='btn-close' data-bs-dismiss='alert'></button>
+          </div>";
 }
-
 // Redirect to another page
 function redirect($url)
 {
