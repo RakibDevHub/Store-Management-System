@@ -91,7 +91,7 @@
 <!-- Top Navigation Bar -->
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="index.php">
+        <a class="navbar-brand" href="/index.php">
             <i class="fas fa-store me-2"></i>Store Management System
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -125,60 +125,60 @@
             <div class="position-sticky pt-3">
                 <ul class="nav flex-column">
                     <li class="nav-item">
-                        <a class="nav-link" href="index.php">
+                        <a class="nav-link" href="/index.php">
                             <i class="fas fa-tachometer-alt"></i> Dashboard
                         </a>
                     </li>
                     
                     <?php if(isAdmin()): ?>
                         <li class="nav-item">
-                            <a class="nav-link" href="../admin/branches/list.php">
+                            <a class="nav-link" href="/admin/branches/list.php">
                                 <i class="fas fa-building"></i> Branches
                             </a>
                         </li>
                     <?php endif; ?>
                     
                     <li class="nav-item">
-                        <a class="nav-link" href="../admin/categories/list.php">
+                        <a class="nav-link" href="/admin/categories/list.php">
                             <i class="fas fa-tags"></i> Categories
                         </a>
                     </li>
                     
                     <?php if(isAdmin()): ?>
                         <li class="nav-item">
-                            <a class="nav-link" href="../admin/products/list.php">
+                            <a class="nav-link" href="/admin/products/list.php">
                                 <i class="fas fa-boxes"></i> All Products
                             </a>
                         </li>
                     <?php else: ?>
                         <li class="nav-item">
-                            <a class="nav-link" href="../staff/products/list.php">
+                            <a class="nav-link" href="/staff/products/list.php">
                                 <i class="fas fa-box"></i> Products
                             </a>
                         </li>
                     <?php endif; ?>
                     
                     <li class="nav-item">
-                        <a class="nav-link" href="../sales/add.php">
+                        <a class="nav-link" href="/sales/add.php">
                             <i class="fas fa-shopping-cart"></i> Record Sale
                         </a>
                     </li>
                     
                     <li class="nav-item">
-                        <a class="nav-link" href="../sales/list.php">
+                        <a class="nav-link" href="/sales/list.php">
                             <i class="fas fa-list"></i> Sales List
                         </a>
                     </li>
                     
                     <li class="nav-item">
-                        <a class="nav-link" href="../reports/sales_report.php">
+                        <a class="nav-link" href="/reports/sales_report.php">
                             <i class="fas fa-chart-line"></i> Sales Report
                         </a>
                     </li>
                     
                     <?php if(isAdmin()): ?>
                         <li class="nav-item">
-                            <a class="nav-link" href="../admin/users/list.php">
+                            <a class="nav-link" href="/admin/users/list.php">
                                 <i class="fas fa-users"></i> Users
                             </a>
                         </li>

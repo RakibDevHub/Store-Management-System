@@ -2,7 +2,7 @@
 </div>
 </div>
 
-<footer>
+<footer class="m-0">
     <div class="container-fluid">
         <p class="mb-0">&copy; <?php echo date('Y'); ?> Store Management System. All rights reserved.</p>
     </div>
