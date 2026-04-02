@@ -9,6 +9,8 @@ if (!isAdmin()) {
 // Get filter parameters
 $branch_filter = isset($_GET['branch_id']) ? intval($_GET['branch_id']) : 0;
 $category_filter = isset($_GET['category_id']) ? intval($_GET['category_id']) : 0;
+$search = isset($_GET['search']) ? sanitize($_GET['search']) : '';
+$stock_filter = isset($_GET['stock_filter']) ? $_GET['stock_filter'] : '';
 
 // Build query with filters
 $sql = "SELECT p.*, c.category_name, b.branch_name 
@@ -17,11 +19,31 @@ $sql = "SELECT p.*, c.category_name, b.branch_name
         LEFT JOIN branches b ON p.branch_id = b.branch_id
         WHERE 1=1";
 
+// Apply branch filter
 if ($branch_filter > 0) {
     $sql .= " AND p.branch_id = $branch_filter";
 }
+
+// Apply category filter
 if ($category_filter > 0) {
     $sql .= " AND p.category_id = $category_filter";
+}
+
+// Apply search filter
+if (!empty($search)) {
+    $sql .= " AND (p.product_name LIKE '%$search%' 
+              OR p.product_code LIKE '%$search%'
+              OR c.category_name LIKE '%$search%'
+              OR b.branch_name LIKE '%$search%')";
+}
+
+// Apply stock filter
+if ($stock_filter == 'low') {
+    $sql .= " AND p.quantity <= p.reorder_level AND p.quantity > 0";
+} elseif ($stock_filter == 'out') {
+    $sql .= " AND p.quantity <= 0";
+} elseif ($stock_filter == 'in') {
+    $sql .= " AND p.quantity > p.reorder_level";
 }
 
 $sql .= " ORDER BY p.product_id DESC";
@@ -35,48 +57,104 @@ include '../../includes/header.php';
 ?>
 
 <div class="card shadow-sm">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap">
-        <h5 class="mb-0"><i class="fas fa-boxes me-2"></i>All Products (All Branches)</h5>
-        <a href="add.php" class="btn btn-sm btn-success">
-            <i class="fas fa-plus me-1"></i>Add Product
-        </a>
+    <div class="card-header bg-white">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="mb-0"><i class="fas fa-boxes me-2"></i>All Products (All Branches)</h5>
+            <a href="add.php" class="btn btn-sm btn-success">
+                <i class="fas fa-plus me-1"></i>Add Product
+            </a>
+        </div>
+
     </div>
-    
+
     <div class="card-body">
-        <!-- Filter Form -->
-        <form method="GET" action="" class="mb-3">
-            <div class="row g-2">
-                <div class="col-md-4">
-                    <select name="branch_id" class="form-select form-select-sm">
-                        <option value="0">All Branches</option>
-                        <?php while($branch = $branches->fetch_assoc()): ?>
-                            <option value="<?php echo $branch['branch_id']; ?>" <?php echo ($branch_filter == $branch['branch_id']) ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($branch['branch_name']); ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
+        <div class="mb-3">
+            <!-- Search Bar -->
+            <form method="GET" action="" class="mb-3">
+                <div class="row g-2">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <input type="text" name="search" class="form-control"
+                                placeholder="Search by product name, code, category, or branch..."
+                                value="<?php echo htmlspecialchars($search); ?>">
+                            <?php if (!empty($search) || $branch_filter > 0 || $category_filter > 0 || !empty($stock_filter)): ?>
+                                <a href="list.php" class="btn btn-outline-secondary" title="Clear all filters">
+                                    <i class="fas fa-times"></i> Clear
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="branch_id" class="form-select">
+                            <option value="0">All Branches</option>
+                            <?php
+                            $branches->data_seek(0);
+                            while ($branch = $branches->fetch_assoc()):
+                            ?>
+                                <option value="<?php echo $branch['branch_id']; ?>" <?php echo ($branch_filter == $branch['branch_id']) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($branch['branch_name']); ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="category_id" class="form-select">
+                            <option value="0">All Categories</option>
+                            <?php
+                            $categories->data_seek(0);
+                            while ($category = $categories->fetch_assoc()):
+                            ?>
+                                <option value="<?php echo $category['category_id']; ?>" <?php echo ($category_filter == $category['category_id']) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($category['category_name']); ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select name="stock_filter" class="form-select">
+                            <option value="">All Stock Status</option>
+                            <option value="in" <?php echo ($stock_filter == 'in') ? 'selected' : ''; ?>>In Stock</option>
+                            <option value="low" <?php echo ($stock_filter == 'low') ? 'selected' : ''; ?>>Low Stock</option>
+                            <option value="out" <?php echo ($stock_filter == 'out') ? 'selected' : ''; ?>>Out of Stock</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-filter me-1"></i>Filter
+                        </button>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <select name="category_id" class="form-select form-select-sm">
-                        <option value="0">All Categories</option>
-                        <?php while($category = $categories->fetch_assoc()): ?>
-                            <option value="<?php echo $category['category_id']; ?>" <?php echo ($category_filter == $category['category_id']) ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($category['category_name']); ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
+            </form>
+
+            <!-- Active Filters Display -->
+            <?php if (!empty($search) || $branch_filter > 0 || $category_filter > 0 || !empty($stock_filter)): ?>
+                <div class="mt-2">
+                    <small class="text-muted">
+                        <i class="fas fa-filter me-1"></i>
+                        Active filters:
+                        <?php if (!empty($search)): ?>
+                            <span class="badge bg-secondary">Search: "<?php echo htmlspecialchars($search); ?>"</span>
+                        <?php endif; ?>
+                        <?php if ($branch_filter > 0): ?>
+                            <span class="badge bg-secondary">Branch filter applied</span>
+                        <?php endif; ?>
+                        <?php if ($category_filter > 0): ?>
+                            <span class="badge bg-secondary">Category filter applied</span>
+                        <?php endif; ?>
+                        <?php if ($stock_filter == 'in'): ?>
+                            <span class="badge bg-secondary">In Stock only</span>
+                        <?php elseif ($stock_filter == 'low'): ?>
+                            <span class="badge bg-secondary">Low Stock only</span>
+                        <?php elseif ($stock_filter == 'out'): ?>
+                            <span class="badge bg-secondary">Out of Stock only</span>
+                        <?php endif; ?>
+                        (<?php echo $result->num_rows; ?> results found)
+                    </small>
                 </div>
-                <div class="col-md-4">
-                    <button type="submit" class="btn btn-sm btn-primary">
-                        <i class="fas fa-filter me-1"></i>Filter
-                    </button>
-                    <a href="list.php" class="btn btn-sm btn-secondary">
-                        <i class="fas fa-sync-alt me-1"></i>Reset
-                    </a>
-                </div>
-            </div>
-        </form>
-        
+            <?php endif; ?>
+        </div>
+
         <div class="table-responsive">
             <table class="table table-hover mb-0">
                 <thead class="table-dark">
@@ -93,7 +171,12 @@ include '../../includes/header.php';
                 </thead>
                 <tbody>
                     <?php if ($result->num_rows > 0): ?>
-                        <?php while ($row = $result->fetch_assoc()): 
+                        <?php while ($row = $result->fetch_assoc()):
+                            // Fix: Ensure quantity is never displayed as negative
+                            $display_quantity = max(0, $row['quantity']);
+                            $is_negative = $row['quantity'] < 0;
+
+                            // Stock status logic
                             $stock_status = '';
                             $status_class = '';
                             if ($row['quantity'] <= 0) {
@@ -106,35 +189,67 @@ include '../../includes/header.php';
                                 $stock_status = 'In Stock';
                                 $status_class = 'badge bg-success';
                             }
+
+                            // Highlight search term in product name
+                            $product_name = htmlspecialchars($row['product_name']);
+                            if (!empty($search)) {
+                                $product_name = preg_replace('/(' . preg_quote($search, '/') . ')/i', '<mark>$1</mark>', $product_name);
+                            }
                         ?>
-                        <tr>
-                            <td><?php echo $row['product_id']; ?></td>
-                            <td>
-                                <strong><?php echo htmlspecialchars($row['product_name']); ?></strong><br>
-                                <small class="text-muted">Code: <?php echo htmlspecialchars($row['product_code']); ?></small>
-                            </td>
-                            <td><?php echo htmlspecialchars($row['category_name']); ?></td>
-                            <td>
-                                <span class="badge bg-info"><?php echo htmlspecialchars($row['branch_name']); ?></span>
-                            </td>
-                            <td><?php echo $row['quantity']; ?></td>
-                            <td>৳<?php echo number_format($row['price'], 2); ?></td>
-                            <td><span class="<?php echo $status_class; ?>"><?php echo $stock_status; ?></span></td>
-                            <td>
-                                <a href="edit.php?id=<?php echo $row['product_id']; ?>" class="btn btn-sm btn-primary btn-action" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a href="delete.php?id=<?php echo $row['product_id']; ?>" class="btn btn-sm btn-danger btn-action" onclick="return confirm('Are you sure you want to delete this product?')" title="Delete">
-                                    <i class="fas fa-trash"></i>
-                                </a>
-                            </td>
-                        </tr>
+                            <tr>
+                                <td><?php echo $row['product_id']; ?></td>
+                                <td>
+                                    <strong><?php echo $product_name; ?></strong><br>
+                                    <small class="text-muted">Code: <?php echo htmlspecialchars($row['product_code']); ?></small>
+                                    <?php if ($is_negative): ?>
+                                        <br><small class="text-danger"><i class="fas fa-exclamation-triangle"></i> Invalid quantity in database!</small>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?php echo htmlspecialchars($row['category_name']); ?></td>
+                                <td>
+                                    <span class="badge bg-info"><?php echo htmlspecialchars($row['branch_name']); ?></span>
+                                </td>
+                                <td>
+                                    <?php if ($is_negative): ?>
+                                        <span class="text-danger fw-bold"><?php echo $row['quantity']; ?> (Error!)</span>
+                                    <?php else: ?>
+                                        <?php echo $display_quantity; ?>
+                                    <?php endif; ?>
+                                </td>
+                                <td>৳<?php echo number_format($row['price'], 2); ?></td>
+                                <td><span class="<?php echo $status_class; ?>"><?php echo $stock_status; ?></span></td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="edit.php?id=<?php echo $row['product_id']; ?>" class="btn btn-sm btn-primary" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="delete.php?id=<?php echo $row['product_id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this product?')" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
                         <?php endwhile; ?>
                     <?php else: ?>
                         <tr>
                             <td colspan="8" class="text-center py-4">
                                 <i class="fas fa-box-open fa-3x text-muted mb-2 d-block"></i>
-                                No products found
+                                <p class="mb-0">
+                                    <?php if (!empty($search) || $branch_filter > 0 || $category_filter > 0 || !empty($stock_filter)): ?>
+                                        No products match your filters
+                                    <?php else: ?>
+                                        No products found
+                                    <?php endif; ?>
+                                </p>
+                                <?php if (!empty($search) || $branch_filter > 0 || $category_filter > 0 || !empty($stock_filter)): ?>
+                                    <a href="list.php" class="btn btn-sm btn-primary mt-2">
+                                        <i class="fas fa-eye me-1"></i>View All Products
+                                    </a>
+                                <?php else: ?>
+                                    <a href="add.php" class="btn btn-sm btn-primary mt-2">
+                                        <i class="fas fa-plus me-1"></i>Add First Product
+                                    </a>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endif; ?>
@@ -143,5 +258,13 @@ include '../../includes/header.php';
         </div>
     </div>
 </div>
+
+<style>
+    mark {
+        background-color: #fff3cd;
+        padding: 0 2px;
+        border-radius: 3px;
+    }
+</style>
 
 <?php include '../../includes/footer.php'; ?>
