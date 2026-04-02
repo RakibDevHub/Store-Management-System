@@ -91,22 +91,26 @@ include '../../includes/header.php';
                 </thead>
                 <tbody>
                     <?php if ($result->num_rows > 0): ?>
-                        <?php while ($row = $result->fetch_assoc()): ?>
+                        <?php while ($row = $result->fetch_assoc()):
+                            // Get values and apply highlighting
+                            $category_name = htmlspecialchars($row['category_name']);
+                            $description = htmlspecialchars($row['description'] ?? '');
+
+                            if (!empty($search)) {
+                                // Highlight search term in category name
+                                $category_name = preg_replace('/(' . preg_quote($search, '/') . ')/i', '<mark>$1</mark>', $category_name);
+                                // Highlight search term in description
+                                $description = preg_replace('/(' . preg_quote($search, '/') . ')/i', '<mark>$1</mark>', $description);
+                            }
+                        ?>
                             <tr>
                                 <td><?php echo $row['category_id']; ?></td>
                                 <td>
-                                    <strong><?php echo htmlspecialchars($row['category_name']); ?></strong>
+                                    <strong><?php echo $category_name; ?></strong>
                                 </td>
                                 <td>
                                     <?php if (!empty($row['description'])): ?>
-                                        <?php
-                                        // Highlight search term in description
-                                        $description = htmlspecialchars($row['description']);
-                                        if (!empty($search)) {
-                                            $description = preg_replace('/(' . preg_quote($search, '/') . ')/i', '<mark>$1</mark>', $description);
-                                        }
-                                        echo $description;
-                                        ?>
+                                        <?php echo $description; ?>
                                     <?php else: ?>
                                         <span class="text-muted">—</span>
                                     <?php endif; ?>
@@ -120,15 +124,15 @@ include '../../includes/header.php';
                                 <td><?php echo date('d M Y', strtotime($row['created_at'])); ?></td>
                                 <td>
                                     <div class="btn-group" role="group">
-                                        <a href="edit.php?id=<?php echo $row['category_id']; ?>" class="btn btn-sm btn-primary btn-action" title="Edit">
+                                        <a href="edit.php?id=<?php echo $row['category_id']; ?>" class="btn btn-sm btn-primary" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         <?php if ($row['product_count'] == 0): ?>
-                                            <a href="delete.php?id=<?php echo $row['category_id']; ?>" class="btn btn-sm btn-danger btn-action" onclick="return confirm('Are you sure you want to delete this category?')" title="Delete">
+                                            <a href="delete.php?id=<?php echo $row['category_id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this category?')" title="Delete">
                                                 <i class="fas fa-trash"></i>
                                             </a>
                                         <?php else: ?>
-                                            <button class="btn btn-sm btn-secondary btn-action" disabled title="Cannot delete - Category has products">
+                                            <button class="btn btn-sm btn-secondary" disabled title="Cannot delete - Category has products">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         <?php endif; ?>

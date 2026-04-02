@@ -64,12 +64,11 @@ include '../../includes/header.php';
                 <i class="fas fa-plus me-1"></i>Add Product
             </a>
         </div>
-
     </div>
 
     <div class="card-body">
         <div class="mb-3">
-            <!-- Search Bar -->
+            <!-- Search and Filter Form -->
             <form method="GET" action="" class="mb-3">
                 <div class="row g-2">
                     <div class="col-md-4">
@@ -78,11 +77,6 @@ include '../../includes/header.php';
                             <input type="text" name="search" class="form-control"
                                 placeholder="Search by product name, code, category, or branch..."
                                 value="<?php echo htmlspecialchars($search); ?>">
-                            <?php if (!empty($search) || $branch_filter > 0 || $category_filter > 0 || !empty($stock_filter)): ?>
-                                <a href="list.php" class="btn btn-outline-secondary" title="Clear all filters">
-                                    <i class="fas fa-times"></i> Clear
-                                </a>
-                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="col-md-2">
@@ -120,9 +114,16 @@ include '../../includes/header.php';
                         </select>
                     </div>
                     <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="fas fa-filter me-1"></i>Filter
-                        </button>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary flex-grow-1">
+                                <i class="fas fa-filter me-1"></i>Filter
+                            </button>
+                            <?php if (!empty($search) || $branch_filter > 0 || $category_filter > 0 || !empty($stock_filter)): ?>
+                                <a href="list.php" class="btn btn-outline-danger" title="Clear all filters">
+                                    <i class="fas fa-times"></i> Clear
+                                </a>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
             </form>
@@ -184,7 +185,7 @@ include '../../includes/header.php';
                                 $status_class = 'badge bg-danger';
                             } elseif ($row['quantity'] <= $row['reorder_level']) {
                                 $stock_status = 'Low Stock';
-                                $status_class = 'badge bg-warning';
+                                $status_class = 'badge bg-warning text-dark';
                             } else {
                                 $stock_status = 'In Stock';
                                 $status_class = 'badge bg-success';
@@ -202,7 +203,7 @@ include '../../includes/header.php';
                                     <strong><?php echo $product_name; ?></strong><br>
                                     <small class="text-muted">Code: <?php echo htmlspecialchars($row['product_code']); ?></small>
                                     <?php if ($is_negative): ?>
-                                        <br><small class="text-danger"><i class="fas fa-exclamation-triangle"></i> Invalid quantity in database!</small>
+                                        <br><small class="text-danger"><i class="fas fa-exclamation-triangle"></i> Invalid quantity!</small>
                                     <?php endif; ?>
                                 </td>
                                 <td><?php echo htmlspecialchars($row['category_name']); ?></td>
@@ -258,13 +259,5 @@ include '../../includes/header.php';
         </div>
     </div>
 </div>
-
-<style>
-    mark {
-        background-color: #fff3cd;
-        padding: 0 2px;
-        border-radius: 3px;
-    }
-</style>
 
 <?php include '../../includes/footer.php'; ?>
