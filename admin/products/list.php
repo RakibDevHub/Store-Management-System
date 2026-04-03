@@ -56,10 +56,31 @@ $categories = $conn->query("SELECT * FROM categories ORDER BY category_name");
 include '../../includes/header.php';
 ?>
 
+<script>
+    // Delete confirmation with SweetAlert
+    function confirmDelete(productId, productName) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: `You are about to delete "${productName}". This action cannot be undone!`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `delete.php?id=${productId}`;
+            }
+        });
+        return false;
+    }
+</script>
+
 <div class="card shadow-sm">
     <div class="card-header bg-white">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <h5 class="mb-0"><i class="fas fa-boxes me-2"></i>All Products (All Branches)</h5>
+            <h5 class="mb-0"><i class="fas fa-boxes me-2"></i>All Products</h5>
             <a href="add.php" class="btn btn-sm btn-success">
                 <i class="fas fa-plus me-1"></i>Add Product
             </a>
@@ -108,9 +129,9 @@ include '../../includes/header.php';
                     <div class="col-md-2">
                         <select name="stock_filter" class="form-select">
                             <option value="">All Stock Status</option>
-                            <option value="in" <?php echo ($stock_filter == 'in') ? 'selected' : ''; ?>>In Stock</option>
-                            <option value="low" <?php echo ($stock_filter == 'low') ? 'selected' : ''; ?>>Low Stock</option>
-                            <option value="out" <?php echo ($stock_filter == 'out') ? 'selected' : ''; ?>>Out of Stock</option>
+                            <option value="in" <?php echo ($stock_filter == 'in') ? 'selected' : ''; ?>In Stock</option>
+                            <option value="low" <?php echo ($stock_filter == 'low') ? 'selected' : ''; ?>Low Stock</option>
+                            <option value="out" <?php echo ($stock_filter == 'out') ? 'selected' : ''; ?>Out of Stock</option>
                         </select>
                     </div>
                     <div class="col-md-2">
@@ -173,13 +194,9 @@ include '../../includes/header.php';
                 <tbody>
                     <?php if ($result->num_rows > 0): ?>
                         <?php while ($row = $result->fetch_assoc()):
-                            // Fix: Ensure quantity is never displayed as negative
                             $display_quantity = max(0, $row['quantity']);
                             $is_negative = $row['quantity'] < 0;
 
-                            // Stock status logic
-                            $stock_status = '';
-                            $status_class = '';
                             if ($row['quantity'] <= 0) {
                                 $stock_status = 'Out of Stock';
                                 $status_class = 'badge bg-danger';
@@ -191,11 +208,12 @@ include '../../includes/header.php';
                                 $status_class = 'badge bg-success';
                             }
 
-                            // Highlight search term in product name
                             $product_name = htmlspecialchars($row['product_name']);
                             if (!empty($search)) {
                                 $product_name = preg_replace('/(' . preg_quote($search, '/') . ')/i', '<mark>$1</mark>', $product_name);
                             }
+
+                            $js_product_name = addslashes($row['product_name']);
                         ?>
                             <tr>
                                 <td><?php echo $row['product_id']; ?></td>
@@ -207,16 +225,8 @@ include '../../includes/header.php';
                                     <?php endif; ?>
                                 </td>
                                 <td><?php echo htmlspecialchars($row['category_name']); ?></td>
-                                <td>
-                                    <span class="badge bg-info"><?php echo htmlspecialchars($row['branch_name']); ?></span>
-                                </td>
-                                <td>
-                                    <?php if ($is_negative): ?>
-                                        <span class="text-danger fw-bold"><?php echo $row['quantity']; ?> (Error!)</span>
-                                    <?php else: ?>
-                                        <?php echo $display_quantity; ?>
-                                    <?php endif; ?>
-                                </td>
+                                <td><span class="badge bg-info"><?php echo htmlspecialchars($row['branch_name']); ?></span></td>
+                                <td><?php echo $display_quantity; ?></td>
                                 <td>৳<?php echo number_format($row['price'], 2); ?></td>
                                 <td><span class="<?php echo $status_class; ?>"><?php echo $stock_status; ?></span></td>
                                 <td>
@@ -224,9 +234,9 @@ include '../../includes/header.php';
                                         <a href="edit.php?id=<?php echo $row['product_id']; ?>" class="btn btn-sm btn-primary" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="delete.php?id=<?php echo $row['product_id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this product?')" title="Delete">
+                                        <button onclick="confirmDelete(<?php echo $row['product_id']; ?>, '<?php echo $js_product_name; ?>')" class="btn btn-sm btn-danger" title="Delete">
                                             <i class="fas fa-trash"></i>
-                                        </a>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>

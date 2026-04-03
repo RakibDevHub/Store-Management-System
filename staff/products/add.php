@@ -2,13 +2,8 @@
 require_once '../../includes/auth.php';
 require_once '../../includes/functions.php';
 
-if (!isAdmin()) {
-    redirect('../../index.php');
-}
-
-// Get categories and branches for dropdowns
+$branch_id = getUserBranch();
 $categories = $conn->query("SELECT * FROM categories ORDER BY category_name");
-$branches = $conn->query("SELECT * FROM branches ORDER BY branch_name");
 
 $error = '';
 
@@ -16,72 +11,45 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $product_name = sanitize($_POST['product_name']);
     $product_code = sanitize($_POST['product_code']);
     $category_id = intval($_POST['category_id']);
-    $branch_id = intval($_POST['branch_id']);
     $quantity = intval($_POST['quantity']);
     $price = floatval($_POST['price']);
     $purchase_price = floatval($_POST['purchase_price']);
     $reorder_level = intval($_POST['reorder_level']);
     $description = sanitize($_POST['description']);
 
-    // Validation
-    if (empty($product_name) || $category_id == 0 || $branch_id == 0 || $price <= 0) {
+    if (empty($product_name) || $category_id == 0 || $price <= 0) {
         $error = "Please fill all required fields";
-    } elseif (empty($product_code)) {
-        $error = "Product code is required";
     } else {
-        // Check if product code already exists
-        $check_sql = "SELECT product_id FROM products WHERE product_code = ?";
+        // Check if product code already exists in this branch
+        $check_sql = "SELECT product_id FROM products WHERE product_code = ? AND branch_id = ?";
         $check_stmt = $conn->prepare($check_sql);
-        $check_stmt->bind_param("s", $product_code);
+        $check_stmt->bind_param("si", $product_code, $branch_id);
         $check_stmt->execute();
-        $check_result = $check_stmt->get_result();
-
-        if ($check_result->num_rows > 0) {
-            $error = "Product code already exists! Please use a unique product code.";
+        if ($check_stmt->get_result()->num_rows > 0) {
+            $error = "Product code already exists in your branch!";
         } else {
-            // Insert product
             $sql = "INSERT INTO products (product_name, product_code, category_id, branch_id, quantity, price, purchase_price, reorder_level, description) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("ssiiiddis", $product_name, $product_code, $category_id, $branch_id, $quantity, $price, $purchase_price, $reorder_level, $description);
 
             if ($stmt->execute()) {
-                // Get the insert ID safely
-                $product_id = $conn->insert_id;
+                logActivity($_SESSION['user_id'], 'Add Product', "Added product: $product_name to branch: " . $_SESSION['branch_name']);
 
-                // Log activity
-                logActivity($_SESSION['user_id'], 'Add Product', "Added product: $product_name (Code: $product_code) to branch ID: $branch_id");
-
-                // Record stock movement if quantity > 0
+                // Add stock movement
                 if ($quantity > 0) {
                     $movement_sql = "INSERT INTO stock_movements (product_id, branch_id, movement_type, quantity, previous_quantity, new_quantity, notes, created_by) 
-                                     VALUES (?, ?, 'purchase', ?, 0, ?, 'Initial stock on product creation', ?)";
+                                     VALUES (?, ?, 'purchase', ?, 0, ?, 'Initial stock', ?)";
                     $movement_stmt = $conn->prepare($movement_sql);
-                    $movement_stmt->bind_param("iiiii", $product_id, $branch_id, $quantity, $quantity, $_SESSION['user_id']);
-
-                    if (!$movement_stmt->execute()) {
-                        error_log("Failed to record stock movement: " . $movement_stmt->error);
-                    }
-                    $movement_stmt->close();
+                    $movement_stmt->bind_param("iiiii", $stmt->insert_id, $branch_id, $quantity, $quantity, $_SESSION['user_id']);
+                    $movement_stmt->execute();
                 }
-
-                $stmt->close();
-                $check_stmt->close();
-
-                // Set success message in session
-                $_SESSION['flash_message'] = [
-                    'type' => 'success',
-                    'title' => 'Success!',
-                    'text' => "Product '$product_name' has been added successfully."
-                ];
 
                 redirect('list.php');
             } else {
-                $error = "Database error: " . $stmt->error;
-                $stmt->close();
+                $error = "Error: " . $conn->error;
             }
         }
-        if (isset($check_stmt)) $check_stmt->close();
     }
 }
 
@@ -90,7 +58,7 @@ include '../../includes/header.php';
 
 <div class="card shadow-sm">
     <div class="card-header bg-white">
-        <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Add New Product</h5>
+        <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Add Product to <?php echo $_SESSION['branch_name']; ?></h5>
     </div>
     <div class="card-body">
         <?php if ($error): ?>
@@ -106,7 +74,7 @@ include '../../includes/header.php';
                     <label class="form-label">Product Name <span class="text-danger">*</span></label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-tag"></i></span>
-                        <input type="text" name="product_name" class="form-control" value="<?php echo isset($_POST['product_name']) ? htmlspecialchars($_POST['product_name']) : ''; ?>" required>
+                        <input type="text" name="product_name" class="form-control" required autofocus>
                     </div>
                 </div>
 
@@ -114,9 +82,8 @@ include '../../includes/header.php';
                     <label class="form-label">Product Code <span class="text-danger">*</span></label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-barcode"></i></span>
-                        <input type="text" name="product_code" class="form-control" value="<?php echo isset($_POST['product_code']) ? htmlspecialchars($_POST['product_code']) : ''; ?>" required>
+                        <input type="text" name="product_code" class="form-control" required>
                     </div>
-                    <small class="text-muted">Unique identifier for this product (e.g., SKU-001)</small>
                 </div>
 
                 <div class="col-md-6 mb-3">
@@ -124,7 +91,7 @@ include '../../includes/header.php';
                     <select name="category_id" class="form-select" required>
                         <option value="">Select Category</option>
                         <?php while ($cat = $categories->fetch_assoc()): ?>
-                            <option value="<?php echo $cat['category_id']; ?>" <?php echo (isset($_POST['category_id']) && $_POST['category_id'] == $cat['category_id']) ? 'selected' : ''; ?>>
+                            <option value="<?php echo $cat['category_id']; ?>">
                                 <?php echo htmlspecialchars($cat['category_name']); ?>
                             </option>
                         <?php endwhile; ?>
@@ -132,55 +99,46 @@ include '../../includes/header.php';
                 </div>
 
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">Branch <span class="text-danger">*</span></label>
-                    <select name="branch_id" class="form-select" required>
-                        <option value="">Select Branch</option>
-                        <?php while ($branch = $branches->fetch_assoc()): ?>
-                            <option value="<?php echo $branch['branch_id']; ?>" <?php echo (isset($_POST['branch_id']) && $_POST['branch_id'] == $branch['branch_id']) ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($branch['branch_name']); ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
+                    <label class="form-label">Branch</label>
+                    <input type="text" class="form-control" value="<?php echo $_SESSION['branch_name']; ?>" disabled>
+                    <small class="text-muted">Products are automatically assigned to your branch</small>
                 </div>
 
                 <div class="col-md-3 mb-3">
-                    <label class="form-label">Initial Quantity</label>
+                    <label class="form-label">Quantity</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-cubes"></i></span>
-                        <input type="number" name="quantity" class="form-control" value="<?php echo isset($_POST['quantity']) ? $_POST['quantity'] : '0'; ?>" min="0">
-                    </div>
-                    <small class="text-muted">Initial stock quantity for this branch</small>
-                </div>
-
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Selling Price (BDT) <span class="text-danger">*</span></label>
-                    <div class="input-group">
-                        <span class="input-group-text">৳</span>
-                        <input type="number" name="price" class="form-control" step="0.01" min="0" value="<?php echo isset($_POST['price']) ? $_POST['price'] : ''; ?>" required>
+                        <input type="number" name="quantity" class="form-control" value="0" min="0">
                     </div>
                 </div>
 
                 <div class="col-md-3 mb-3">
-                    <label class="form-label">Purchase Price (BDT)</label>
+                    <label class="form-label">Price (BDT) <span class="text-danger">*</span></label>
                     <div class="input-group">
                         <span class="input-group-text">৳</span>
-                        <input type="number" name="purchase_price" class="form-control" step="0.01" min="0" value="<?php echo isset($_POST['purchase_price']) ? $_POST['purchase_price'] : '0'; ?>">
+                        <input type="number" name="price" class="form-control" step="0.01" min="0" required>
                     </div>
-                    <small class="text-muted">Cost price for profit calculation</small>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <label class="form-label">Purchase Price</label>
+                    <div class="input-group">
+                        <span class="input-group-text">৳</span>
+                        <input type="number" name="purchase_price" class="form-control" step="0.01" min="0">
+                    </div>
                 </div>
 
                 <div class="col-md-3 mb-3">
                     <label class="form-label">Reorder Level</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-bell"></i></span>
-                        <input type="number" name="reorder_level" class="form-control" value="<?php echo isset($_POST['reorder_level']) ? $_POST['reorder_level'] : '5'; ?>" min="0">
+                        <input type="number" name="reorder_level" class="form-control" value="5" min="0">
                     </div>
-                    <small class="text-muted">Alert when stock falls below this level</small>
                 </div>
 
                 <div class="col-12 mb-3">
                     <label class="form-label">Description</label>
-                    <textarea name="description" class="form-control" rows="3" placeholder="Product description..."><?php echo isset($_POST['description']) ? htmlspecialchars($_POST['description']) : ''; ?></textarea>
+                    <textarea name="description" class="form-control" rows="3" placeholder="Product description..."></textarea>
                 </div>
             </div>
 

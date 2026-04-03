@@ -1,14 +1,17 @@
 <?php
 require_once '../includes/auth.php';
-require_once '../config/database.php';
+require_once '../includes/functions.php';
 
-$db = new Database();
-$conn = $db->getConnection();
+$is_admin = isAdmin();
+$user_branch = getUserBranch();
 
+// Get filter parameters
 $filter = isset($_GET['filter']) ? $_GET['filter'] : 'today';
+$branch_filter = isset($_GET['branch_id']) ? intval($_GET['branch_id']) : 0;
 $from_date = '';
 $to_date = '';
 
+// Set date range based on filter
 switch ($filter) {
     case 'today':
         $from_date = date('Y-m-d');
@@ -19,137 +22,348 @@ switch ($filter) {
         $to_date = date('Y-m-d');
         break;
     case 'month':
-        $from_date = date('Y-m-d', strtotime('-30 days'));
-        $to_date = date('Y-m-d');
+        $from_date = date('Y-m-01');
+        $to_date = date('Y-m-t');
         break;
     default:
         $from_date = date('Y-m-d');
         $to_date = date('Y-m-d');
 }
 
-if (isset($_GET['from_date']) && isset($_GET['to_date'])) {
+// IMPORTANT: Only override with custom dates if filter is NOT a quick filter
+// AND both date fields are provided
+if (
+    $filter == 'custom' && isset($_GET['from_date']) && isset($_GET['to_date'])
+    && !empty($_GET['from_date']) && !empty($_GET['to_date'])
+) {
     $from_date = $_GET['from_date'];
     $to_date = $_GET['to_date'];
-    $filter = 'custom';
 }
 
-$sql = "SELECT s.*, p.product_name, c.category_name 
+// Build query with role-based filtering
+$sql = "SELECT s.*, p.product_name, c.category_name, b.branch_name 
         FROM sales s 
         LEFT JOIN products p ON s.product_id = p.product_id 
-        LEFT JOIN categories c ON p.product_category = c.category_id 
-        WHERE s.sale_date BETWEEN '$from_date' AND '$to_date'
-        ORDER BY s.sale_date DESC";
+        LEFT JOIN categories c ON p.category_id = c.category_id 
+        LEFT JOIN branches b ON s.branch_id = b.branch_id
+        WHERE s.sale_date BETWEEN '$from_date' AND '$to_date'";
+
+// Apply branch filter based on role
+if (!$is_admin) {
+    $sql .= " AND s.branch_id = $user_branch";
+} elseif ($branch_filter > 0) {
+    $sql .= " AND s.branch_id = $branch_filter";
+}
+
+$sql .= " ORDER BY s.sale_date DESC";
 $result = $conn->query($sql);
 
+// Calculate totals
 $total_sales = 0;
 $total_amount = 0;
 $category_totals = [];
 
 while ($row = $result->fetch_assoc()) {
     $total_sales++;
-    $total_amount += $row['total_amount'];
-    
+    $total_amount += $row['grand_total'];
+
     $category = $row['category_name'] ?? 'Uncategorized';
     if (!isset($category_totals[$category])) {
         $category_totals[$category] = 0;
     }
-    $category_totals[$category] += $row['total_amount'];
+    $category_totals[$category] += $row['grand_total'];
 }
 
 // Reset result pointer
 $result->data_seek(0);
 
+// Get branches for filter (admin only)
+$branches = [];
+if ($is_admin) {
+    $branches_result = $conn->query("SELECT * FROM branches ORDER BY branch_name");
+    while ($b = $branches_result->fetch_assoc()) {
+        $branches[] = $b;
+    }
+} else {
+    // Get staff's branch name
+    $branch_result = $conn->query("SELECT branch_name FROM branches WHERE branch_id = $user_branch");
+    $staff_branch = $branch_result->fetch_assoc();
+}
+
 include '../includes/header.php';
 ?>
 
-<div class="card">
-    <h2 class="card-title">Sales Report</h2>
-    
-    <!-- Filter Form -->
-    <form method="GET" action="" style="margin-bottom: 20px;">
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <a href="?filter=today" class="btn <?php echo $filter == 'today' ? 'btn-primary' : ''; ?>">Today</a>
-            <a href="?filter=week" class="btn <?php echo $filter == 'week' ? 'btn-primary' : ''; ?>">Last 7 Days</a>
-            <a href="?filter=month" class="btn <?php echo $filter == 'month' ? 'btn-primary' : ''; ?>">Last 30 Days</a>
-            
-            <div style="display: flex; gap: 5px;">
-                <input type="date" name="from_date" class="form-control" style="width: auto;" value="<?php echo $from_date; ?>">
-                <span>to</span>
-                <input type="date" name="to_date" class="form-control" style="width: auto;" value="<?php echo $to_date; ?>">
-                <button type="submit" class="btn btn-primary">Apply</button>
+<div class="card shadow-sm">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Sales Report</h5>
+    </div>
+    <div class="card-body">
+        <!-- Filter Form -->
+        <form method="GET" action="" class="mb-4" id="reportForm">
+            <div class="row g-2 align-items-end">
+                <?php if ($is_admin): ?>
+                    <div class="col-md-2">
+                        <label class="form-label">Branch</label>
+                        <select name="branch_id" class="form-select" onchange="this.form.submit()">
+                            <option value="0">All Branches</option>
+                            <?php foreach ($branches as $b): ?>
+                                <option value="<?php echo $b['branch_id']; ?>" <?php echo ($branch_filter == $b['branch_id']) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($b['branch_name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                <?php else: ?>
+                    <div class="col-md-2">
+                        <label class="form-label">Branch</label>
+                        <select class="form-select" disabled>
+                            <option selected><?php echo htmlspecialchars($staff_branch['branch_name']); ?></option>
+                        </select>
+                    </div>
+                <?php endif; ?>
+
+                <div class="col-md-2">
+                    <label class="form-label">Quick Filter</label>
+                    <select name="filter" class="form-select" id="quickFilter" onchange="updateDates()">
+                        <option value="today" <?php echo $filter == 'today' ? 'selected' : ''; ?>>Today</option>
+                        <option value="week" <?php echo $filter == 'week' ? 'selected' : ''; ?>>Last 7 Days</option>
+                        <option value="month" <?php echo $filter == 'month' ? 'selected' : ''; ?>>Current Month</option>
+                        <option value="custom" <?php echo $filter == 'custom' ? 'selected' : ''; ?>>Custom Range</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">From Date</label>
+                    <input type="date" name="from_date" id="from_date" class="form-control" value="<?php echo $from_date; ?>">
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">To Date</label>
+                    <input type="date" name="to_date" id="to_date" class="form-control" value="<?php echo $to_date; ?>">
+                </div>
+
+                <div class="col-md-2">
+                    <button type="submit" name="apply_custom" class="btn btn-primary w-100">
+                        <i class="fas fa-search"></i> Apply
+                    </button>
+                </div>
+
+                <div class="col-md-2">
+                    <a href="sales_report.php" class="btn btn-secondary w-100">
+                        <i class="fas fa-sync-alt"></i> Reset
+                    </a>
+                </div>
+            </div>
+        </form>
+
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card bg-primary text-white stats-card">
+                    <div class="card-body">
+                        <h6 class="card-title">Total Transactions</h6>
+                        <h3 class="mb-0"><?php echo $total_sales; ?></h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-success text-white stats-card">
+                    <div class="card-body">
+                        <h6 class="card-title">Total Revenue</h6>
+                        <h3 class="mb-0">৳<?php echo number_format($total_amount, 2); ?></h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-info text-white stats-card">
+                    <div class="card-body">
+                        <h6 class="card-title">Average Sale Value</h6>
+                        <h3 class="mb-0">৳<?php echo $total_sales > 0 ? number_format($total_amount / $total_sales, 2) : '0.00'; ?></h3>
+                    </div>
+                </div>
             </div>
         </div>
-    </form>
-    
-    <!-- Summary Cards -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
-        <div style="background: #007bff; color: white; padding: 15px; border-radius: 5px; text-align: center;">
-            <h3>Total Sales</h3>
-            <div style="font-size: 24px;"><?php echo $total_sales; ?></div>
-        </div>
-        <div style="background: #28a745; color: white; padding: 15px; border-radius: 5px; text-align: center;">
-            <h3>Total Revenue</h3>
-            <div style="font-size: 24px;">৳<?php echo number_format($total_amount, 2); ?></div>
-        </div>
-        <div style="background: #ffc107; color: #333; padding: 15px; border-radius: 5px; text-align: center;">
-            <h3>Average Sale</h3>
-            <div style="font-size: 24px;">৳<?php echo $total_sales > 0 ? number_format($total_amount / $total_sales, 2) : '0'; ?></div>
+
+        <!-- Sales by Category -->
+        <?php if (count($category_totals) > 0): ?>
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Sales by Category</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Revenue</th>
+                                    <th>Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($category_totals as $category => $amount): ?>
+                                    <?php $percentage = $total_amount > 0 ? ($amount / $total_amount) * 100 : 0; ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($category); ?></td>
+                                        <td>৳<?php echo number_format($amount, 2); ?></td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar bg-success" style="width: <?php echo $percentage; ?>%;">
+                                                    <?php echo round($percentage, 1); ?>%
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <!-- Detailed Sales List -->
+        <div class="card">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="fas fa-list me-2"></i>Sales Details</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Date</th>
+                                <th>Invoice #</th>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <?php if ($is_admin): ?>
+                                    <th>Branch</th>
+                                <?php endif; ?>
+                                <th>Quantity</th>
+                                <th>Unit Price</th>
+                                <th>Total</th>
+                                <th>Payment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if ($result->num_rows > 0): ?>
+                                <?php while ($row = $result->fetch_assoc()): ?>
+                                    <tr>
+                                        <td><?php echo date('d M Y', strtotime($row['sale_date'])); ?></td>
+                                        <td><strong><?php echo htmlspecialchars($row['invoice_number']); ?></strong></td>
+                                        <td><?php echo htmlspecialchars($row['product_name']); ?></td>
+                                        <td><?php echo htmlspecialchars($row['category_name'] ?? 'Uncategorized'); ?></td>
+                                        <?php if ($is_admin): ?>
+                                            <td><span class="badge bg-info"><?php echo htmlspecialchars($row['branch_name']); ?></span></td>
+                                        <?php endif; ?>
+                                        <td><?php echo $row['quantity']; ?></td>
+                                        <td>৳<?php echo number_format($row['unit_price'], 2); ?></td>
+                                        <td>৳<?php echo number_format($row['grand_total'], 2); ?></td>
+                                        <td>
+                                            <?php
+                                            $badge_class = ($row['payment_method'] == 'cash') ? 'success' : (($row['payment_method'] == 'card') ? 'info' : 'warning');
+                                            ?>
+                                            <span class="badge bg-<?php echo $badge_class; ?>">
+                                                <?php echo ucfirst(str_replace('_', ' ', $row['payment_method'])); ?>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="<?php echo $is_admin ? '9' : '8'; ?>" class="text-center py-4">
+                                        <i class="fas fa-chart-line fa-3x text-muted mb-2 d-block"></i>
+                                        <p class="mb-0">No sales found for the selected period</p>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                        <?php if ($result->num_rows > 0): ?>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <?php if ($is_admin): ?>
+                                        <td colspan="6" class="text-end fw-bold">Grand Total:</td>
+                                        <td colspan="3" class="fw-bold">৳<?php echo number_format($total_amount, 2); ?></td>
+                                    <?php else: ?>
+                                        <td colspan="5" class="text-end fw-bold">Grand Total:</td>
+                                        <td colspan="3" class="fw-bold">৳<?php echo number_format($total_amount, 2); ?></td>
+                                    <?php endif; ?>
+                                </tr>
+                            </tfoot>
+                        <?php endif; ?>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
-    
-    <!-- Sales by Category -->
-    <?php if (count($category_totals) > 0): ?>
-    <div style="margin-bottom: 20px;">
-        <h3>Sales by Category</h3>
-        <table>
-            <thead>
-                 <tr>
-                    <th>Category</th>
-                    <th>Revenue</th>
-                 </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($category_totals as $category => $amount): ?>
-                 <tr>
-                    <td><?php echo htmlspecialchars($category); ?></td>
-                    <td>৳<?php echo number_format($amount, 2); ?></td>
-                 </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    </div>
-    <?php endif; ?>
-    
-    <!-- Detailed Sales List -->
-    <h3>Sales Details</h3>
-    <table>
-        <thead>
-             <tr>
-                <th>Date</th>
-                <th>Product</th>
-                <th>Category</th>
-                <th>Quantity</th>
-                <th>Amount</th>
-             </tr>
-        </thead>
-        <tbody>
-            <?php if ($result->num_rows > 0): ?>
-                <?php while ($row = $result->fetch_assoc()): ?>
-                 <tr>
-                    <td><?php echo $row['sale_date']; ?></td>
-                    <td><?php echo htmlspecialchars($row['product_name']); ?></td>
-                    <td><?php echo htmlspecialchars($row['category_name'] ?? 'Uncategorized'); ?></td>
-                    <td><?php echo $row['quantity']; ?></td>
-                    <td>৳<?php echo number_format($row['total_amount'], 2); ?></td>
-                 </tr>
-                <?php endwhile; ?>
-            <?php else: ?>
-                 <tr>
-                    <td colspan="5" style="text-align: center;">No sales found for this period</td>
-                 </tr>
-            <?php endif; ?>
-        </tbody>
-    </table>
 </div>
+
+<script>
+    function updateDates() {
+        const filter = document.getElementById('quickFilter').value;
+        const today = new Date();
+        let fromDate = '';
+        let toDate = '';
+
+        // Format date as YYYY-MM-DD
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        switch (filter) {
+            case 'today':
+                fromDate = formatDate(today);
+                toDate = formatDate(today);
+                break;
+            case 'week':
+                const weekAgo = new Date(today);
+                weekAgo.setDate(today.getDate() - 7);
+                fromDate = formatDate(weekAgo);
+                toDate = formatDate(today);
+                break;
+            case 'month':
+                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+                fromDate = formatDate(firstDay);
+                toDate = formatDate(lastDay);
+                break;
+            case 'custom':
+                // Don't auto-fill, keep existing values or let user select
+                return;
+        }
+
+        // Update date inputs
+        document.getElementById('from_date').value = fromDate;
+        document.getElementById('to_date').value = toDate;
+
+        // Submit the form
+        document.getElementById('reportForm').submit();
+    }
+</script>
+
+<style>
+    .stats-card {
+        transition: transform 0.3s;
+        cursor: pointer;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .progress {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    select:disabled {
+        background-color: #e9ecef;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+</style>
 
 <?php include '../includes/footer.php'; ?>
