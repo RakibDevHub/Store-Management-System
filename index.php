@@ -31,7 +31,7 @@ include 'includes/header.php';
         <h4 class="card-title">Welcome, <?php echo $user_name; ?>!</h4>
         <p class="card-text">
             <span class="badge bg-primary"><?php echo ucfirst($_SESSION['role']); ?></span>
-            <?php if(!$is_admin): ?>
+            <?php if (!$is_admin): ?>
                 <span class="badge bg-info">Branch: <?php echo $branch_name; ?></span>
             <?php endif; ?>
         </p>
@@ -40,7 +40,7 @@ include 'includes/header.php';
 
 <!-- Statistics Cards -->
 <div class="row mb-4">
-    <?php if($is_admin): ?>
+    <?php if ($is_admin): ?>
         <div class="col-md-3 mb-3">
             <div class="card stats-card bg-primary text-white shadow-sm">
                 <div class="card-body">
@@ -55,7 +55,7 @@ include 'includes/header.php';
             </div>
         </div>
     <?php endif; ?>
-    
+
     <div class="col-md-3 mb-3">
         <div class="card stats-card bg-success text-white shadow-sm">
             <div class="card-body">
@@ -69,7 +69,7 @@ include 'includes/header.php';
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-3 mb-3">
         <div class="card stats-card bg-info text-white shadow-sm">
             <div class="card-body">
@@ -83,7 +83,7 @@ include 'includes/header.php';
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-3 mb-3">
         <div class="card stats-card bg-warning text-white shadow-sm">
             <div class="card-body">
@@ -97,8 +97,8 @@ include 'includes/header.php';
             </div>
         </div>
     </div>
-    
-    <?php if($is_admin): ?>
+
+    <?php if ($is_admin): ?>
         <div class="col-md-3 mb-3">
             <div class="card stats-card bg-danger text-white shadow-sm">
                 <div class="card-body">
@@ -119,20 +119,32 @@ include 'includes/header.php';
 <h5 class="mb-3"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
 <div class="row">
     <div class="col-md-4 mb-3">
-        <a href="sales/add.php" class="text-decoration-none">
-            <div class="card text-center h-100 shadow-sm hover-card">
-                <div class="card-body">
-                    <i class="fas fa-shopping-cart fa-3x text-primary mb-3"></i>
-                    <h5 class="card-title">Record Sale</h5>
-                    <p class="card-text small text-muted">Sell products to customers</p>
+        <?php if ($is_admin): ?>
+            <a href="/admin/sales/add.php" class="text-decoration-none">
+                <div class="card text-center h-100 shadow-sm hover-card">
+                    <div class="card-body">
+                        <i class="fas fa-shopping-cart fa-3x text-primary mb-3"></i>
+                        <h5 class="card-title">Record Sale</h5>
+                        <p class="card-text small text-muted">Add new sales transaction</p>
+                    </div>
                 </div>
-            </div>
-        </a>
+            </a>
+        <?php else: ?>
+            <a href="/staff/sales/add.php" class="text-decoration-none">
+                <div class="card text-center h-100 shadow-sm hover-card">
+                    <div class="card-body">
+                        <i class="fas fa-shopping-cart fa-3x text-primary mb-3"></i>
+                        <h5 class="card-title">Record Sale</h5>
+                        <p class="card-text small text-muted">Add new sales transaction</p>
+                    </div>
+                </div>
+            </a>
+        <?php endif; ?>
     </div>
-    
+
     <div class="col-md-4 mb-3">
-        <?php if($is_admin): ?>
-            <a href="admin/products/add.php" class="text-decoration-none">
+        <?php if ($is_admin): ?>
+            <a href="/admin/products/add.php" class="text-decoration-none">
                 <div class="card text-center h-100 shadow-sm hover-card">
                     <div class="card-body">
                         <i class="fas fa-plus-circle fa-3x text-success mb-3"></i>
@@ -142,7 +154,7 @@ include 'includes/header.php';
                 </div>
             </a>
         <?php else: ?>
-            <a href="staff/products/add.php" class="text-decoration-none">
+            <a href="/staff/products/add.php" class="text-decoration-none">
                 <div class="card text-center h-100 shadow-sm hover-card">
                     <div class="card-body">
                         <i class="fas fa-plus-circle fa-3x text-success mb-3"></i>
@@ -153,7 +165,7 @@ include 'includes/header.php';
             </a>
         <?php endif; ?>
     </div>
-    
+
     <div class="col-md-4 mb-3">
         <a href="reports/sales_report.php" class="text-decoration-none">
             <div class="card text-center h-100 shadow-sm hover-card">
@@ -171,13 +183,16 @@ include 'includes/header.php';
     .hover-card {
         transition: transform 0.3s, box-shadow 0.3s;
     }
+
     .hover-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
     }
+
     .opacity-50 {
         opacity: 0.5;
     }
+
     .stats-card {
         border: none;
         border-radius: 10px;
