@@ -44,7 +44,7 @@ include '../../includes/header.php';
     <div class="card-body">
         <!-- Filter Form -->
         <form method="GET" action="" class="row g-2 mb-3">
-            <div class="col-md-4">
+            <div class="col-md-5">
                 <input type="text" name="search" class="form-control" placeholder="Search by invoice or product..." value="<?php echo htmlspecialchars($search); ?>">
             </div>
             <div class="col-md-3">
@@ -62,7 +62,7 @@ include '../../includes/header.php';
                     <i class="fas fa-filter me-1"></i>Filter
                 </button>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <a href="list.php" class="btn btn-secondary w-100">
                     <i class="fas fa-sync-alt me-1"></i>Reset
                 </a>

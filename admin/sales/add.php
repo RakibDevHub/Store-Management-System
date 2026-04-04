@@ -6,8 +6,6 @@ if (!isAdmin()) {
     redirect('../../index.php');
 }
 
-$error = '';
-$success = '';
 $selected_branch = isset($_GET['branch_id']) ? intval($_GET['branch_id']) : 0;
 
 // Get all branches
@@ -36,11 +34,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $product = $product_query->fetch_assoc();
 
     if (!$product) {
-        $error = "Product not found!";
+        $_SESSION['flash_message'] = [
+            'type' => 'error',
+            'title' => 'Error!',
+            'text' => 'Product not found!'
+        ];
     } elseif ($quantity > $product['stock']) {
-        $error = "Only {$product['stock']} units available!";
+        $_SESSION['flash_message'] = [
+            'type' => 'error',
+            'title' => 'Stock Error!',
+            'text' => "Only {$product['stock']} units available!"
+        ];
     } elseif ($quantity <= 0) {
-        $error = "Quantity must be greater than 0";
+        $_SESSION['flash_message'] = [
+            'type' => 'error',
+            'title' => 'Invalid Quantity!',
+            'text' => 'Quantity must be greater than 0'
+        ];
     } else {
         $total_amount = $product['price'] * $quantity;
         $tax = $total_amount * 0.05;
@@ -61,14 +71,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $conn->query($sale_sql);
 
             $conn->commit();
-            $success = "Sale recorded successfully! Invoice: $invoice_number";
+            
+            // Log activity
+            logActivity($_SESSION['user_id'], 'Record Sale', "Recorded sale of {$quantity} x {$product['product_name']} (Invoice: $invoice_number) for branch ID: $branch_id");
+            
+            // Set flash message
+            $_SESSION['flash_message'] = [
+                'type' => 'success',
+                'title' => 'Success!',
+                'text' => "Sale recorded successfully! Invoice: $invoice_number"
+            ];
 
             // Clear form after successful submission
             $selected_branch = 0;
             $products = null;
+            
+            redirect('list.php');
+
         } catch (Exception $e) {
             $conn->rollback();
-            $error = "Error: " . $e->getMessage();
+            $_SESSION['flash_message'] = [
+                'type' => 'error',
+                'title' => 'Error!',
+                'text' => "Error processing sale: " . $e->getMessage()
+            ];
         }
     }
 }
@@ -81,20 +107,6 @@ include '../../includes/header.php';
         <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>Record Sale (Admin)</h5>
     </div>
     <div class="card-body">
-        <?php if ($error): ?>
-            <div class="alert alert-danger alert-dismissible fade show">
-                <i class="fas fa-exclamation-triangle me-2"></i><?php echo $error; ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        <?php endif; ?>
-
-        <?php if ($success): ?>
-            <div class="alert alert-success alert-dismissible fade show">
-                <i class="fas fa-check-circle me-2"></i><?php echo $success; ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        <?php endif; ?>
-
         <form method="POST" action="">
             <div class="row">
                 <div class="col-md-6 mb-3">
