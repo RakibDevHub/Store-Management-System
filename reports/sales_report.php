@@ -11,33 +11,30 @@ $branch_filter = isset($_GET['branch_id']) ? intval($_GET['branch_id']) : 0;
 $from_date = '';
 $to_date = '';
 
-// Set date range based on filter
-switch ($filter) {
-    case 'today':
-        $from_date = date('Y-m-d');
-        $to_date = date('Y-m-d');
-        break;
-    case 'week':
-        $from_date = date('Y-m-d', strtotime('-7 days'));
-        $to_date = date('Y-m-d');
-        break;
-    case 'month':
-        $from_date = date('Y-m-01');
-        $to_date = date('Y-m-t');
-        break;
-    default:
-        $from_date = date('Y-m-d');
-        $to_date = date('Y-m-d');
-}
-
-// IMPORTANT: Only override with custom dates if filter is NOT a quick filter
-// AND both date fields are provided
-if (
-    $filter == 'custom' && isset($_GET['from_date']) && isset($_GET['to_date'])
-    && !empty($_GET['from_date']) && !empty($_GET['to_date'])
-) {
+// Handle custom date range from POST/GET
+if (isset($_GET['from_date']) && isset($_GET['to_date']) && !empty($_GET['from_date']) && !empty($_GET['to_date'])) {
     $from_date = $_GET['from_date'];
     $to_date = $_GET['to_date'];
+    $filter = '';
+} else {
+    // Set date range based on quick filter
+    switch ($filter) {
+        case 'today':
+            $from_date = date('Y-m-d');
+            $to_date = date('Y-m-d');
+            break;
+        case 'week':
+            $from_date = date('Y-m-d', strtotime('-7 days'));
+            $to_date = date('Y-m-d');
+            break;
+        case 'month':
+            $from_date = date('Y-m-01');
+            $to_date = date('Y-m-t');
+            break;
+        default:
+            $from_date = date('Y-m-d');
+            $to_date = date('Y-m-d');
+    }
 }
 
 // Build query with role-based filtering
@@ -46,7 +43,7 @@ $sql = "SELECT s.*, p.product_name, c.category_name, b.branch_name
         LEFT JOIN products p ON s.product_id = p.product_id 
         LEFT JOIN categories c ON p.category_id = c.category_id 
         LEFT JOIN branches b ON s.branch_id = b.branch_id
-        WHERE s.sale_date BETWEEN '$from_date' AND '$to_date'";
+        WHERE DATE(s.sale_date) BETWEEN '$from_date' AND '$to_date'";
 
 // Apply branch filter based on role
 if (!$is_admin) {
@@ -116,19 +113,16 @@ include '../includes/header.php';
                 <?php else: ?>
                     <div class="col-md-2">
                         <label class="form-label">Branch</label>
-                        <select class="form-select" disabled>
-                            <option selected><?php echo htmlspecialchars($staff_branch['branch_name']); ?></option>
-                        </select>
+                        <input type="text" class="form-control" value="<?php echo htmlspecialchars($staff_branch['branch_name']); ?>" disabled>
                     </div>
                 <?php endif; ?>
 
                 <div class="col-md-2">
                     <label class="form-label">Quick Filter</label>
-                    <select name="filter" class="form-select" id="quickFilter" onchange="updateDates()">
-                        <option value="today" <?php echo $filter == 'today' ? 'selected' : ''; ?>>Today</option>
-                        <option value="week" <?php echo $filter == 'week' ? 'selected' : ''; ?>>Last 7 Days</option>
-                        <option value="month" <?php echo $filter == 'month' ? 'selected' : ''; ?>>Current Month</option>
-                        <option value="custom" <?php echo $filter == 'custom' ? 'selected' : ''; ?>>Custom Range</option>
+                    <select name="filter" class="form-select" id="quickFilter">
+                        <option value="today" <?php echo ($filter == 'today') ? 'selected' : ''; ?>>Today</option>
+                        <option value="week" <?php echo ($filter == 'week') ? 'selected' : ''; ?>>Last 7 Days</option>
+                        <option value="month" <?php echo ($filter == 'month') ? 'selected' : ''; ?>>This Month</option>
                     </select>
                 </div>
 
@@ -143,14 +137,14 @@ include '../includes/header.php';
                 </div>
 
                 <div class="col-md-2">
-                    <button type="submit" name="apply_custom" class="btn btn-primary w-100">
-                        <i class="fas fa-search"></i> Apply
+                    <button type="submit" name="apply_filter" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-1"></i>Apply
                     </button>
                 </div>
 
                 <div class="col-md-2">
                     <a href="sales_report.php" class="btn btn-secondary w-100">
-                        <i class="fas fa-sync-alt"></i> Reset
+                        <i class="fas fa-sync-alt me-1"></i>Reset
                     </a>
                 </div>
             </div>
@@ -239,7 +233,7 @@ include '../includes/header.php';
                                 <?php if ($is_admin): ?>
                                     <th>Branch</th>
                                 <?php endif; ?>
-                                <th>Quantity</th>
+                                <th>Qty</th>
                                 <th>Unit Price</th>
                                 <th>Total</th>
                                 <th>Payment</th>
@@ -285,10 +279,10 @@ include '../includes/header.php';
                                         <td colspan="6" class="text-end fw-bold">Grand Total:</td>
                                         <td colspan="3" class="fw-bold">৳<?php echo number_format($total_amount, 2); ?></td>
                                     <?php else: ?>
-                                        <td colspan="5" class="text-end fw-bold">Grand Total:</td>
-                                        <td colspan="3" class="fw-bold">৳<?php echo number_format($total_amount, 2); ?></td>
-                                    <?php endif; ?>
-                                </tr>
+                                        <td colspan="5" class="text-end fw-bold">Grand Total:</td
+                                            <td colspan="3" class="fw-bold">৳<?php echo number_format($total_amount, 2); ?></td
+                                            <?php endif; ?>
+                                            </tr>
                             </tfoot>
                         <?php endif; ?>
                     </table>
@@ -299,13 +293,12 @@ include '../includes/header.php';
 </div>
 
 <script>
-    function updateDates() {
-        const filter = document.getElementById('quickFilter').value;
+    document.getElementById('quickFilter').addEventListener('change', function() {
+        const filter = this.value;
         const today = new Date();
         let fromDate = '';
         let toDate = '';
 
-        // Format date as YYYY-MM-DD
         function formatDate(date) {
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -330,18 +323,20 @@ include '../includes/header.php';
                 fromDate = formatDate(firstDay);
                 toDate = formatDate(lastDay);
                 break;
-            case 'custom':
-                // Don't auto-fill, keep existing values or let user select
-                return;
         }
 
-        // Update date inputs
         document.getElementById('from_date').value = fromDate;
         document.getElementById('to_date').value = toDate;
 
-        // Submit the form
-        document.getElementById('reportForm').submit();
-    }
+        // Create hidden inputs to preserve filter type
+        const form = document.getElementById('reportForm');
+        const hiddenFilter = document.createElement('input');
+        hiddenFilter.type = 'hidden';
+        hiddenFilter.name = 'filter';
+        hiddenFilter.value = filter;
+        form.appendChild(hiddenFilter);
+        form.submit();
+    });
 </script>
 
 <style>
@@ -357,12 +352,6 @@ include '../includes/header.php';
     .progress {
         border-radius: 10px;
         overflow: hidden;
-    }
-
-    select:disabled {
-        background-color: #e9ecef;
-        cursor: not-allowed;
-        opacity: 0.7;
     }
 </style>
 

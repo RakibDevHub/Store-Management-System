@@ -329,6 +329,14 @@
                                 </a>
                             </li>
                         <?php endif; ?>
+                        <!-- Activity Logs (Admin Only) -->
+                        <?php if (isAdmin()): ?>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/admin/activity_logs.php">
+                                    <i class="fas fa-history"></i> Activity Logs
+                                </a>
+                            </li>
+                        <?php endif; ?>
                     </ul>
                 </div>
             </nav>
