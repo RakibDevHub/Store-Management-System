@@ -25,6 +25,27 @@ $result = $conn->query($sql);
 include '../../includes/header.php';
 ?>
 
+<script>
+    // Delete confirmation with SweetAlert
+    function confirmDelete(branchId, branchName) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: `You are about to delete "${branchName}". This will also delete all products and sales in this branch! This action cannot be undone!`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `delete.php?id=${branchId}`;
+            }
+        });
+        return false;
+    }
+</script>
+
 <div class="card shadow-sm">
     <div class="card-header bg-white">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -37,7 +58,6 @@ include '../../includes/header.php';
 
     <div class="card-body">
         <div class="mb-3">
-
             <!-- Search Bar -->
             <form method="GET" action="" class="mb-2">
                 <div class="row g-2">
@@ -73,6 +93,7 @@ include '../../includes/header.php';
                 </div>
             <?php endif; ?>
         </div>
+
         <div class="table-responsive">
             <table class="table table-hover mb-0">
                 <thead class="table-dark">
@@ -97,6 +118,8 @@ include '../../includes/header.php';
                                 $branch_name = preg_replace('/(' . preg_quote($search, '/') . ')/i', '<mark>$1</mark>', $branch_name);
                                 $branch_location = preg_replace('/(' . preg_quote($search, '/') . ')/i', '<mark>$1</mark>', $branch_location);
                             }
+
+                            $js_branch_name = addslashes($row['branch_name']);
                         ?>
                             <tr>
                                 <td><?php echo $row['branch_id']; ?></td>
@@ -111,9 +134,9 @@ include '../../includes/header.php';
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         <?php if ($row['branch_id'] != 1): ?>
-                                            <a href="delete.php?id=<?php echo $row['branch_id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this branch? This will also delete all products and sales in this branch!')" title="Delete">
+                                            <button onclick="confirmDelete(<?php echo $row['branch_id']; ?>, '<?php echo $js_branch_name; ?>')" class="btn btn-sm btn-danger" title="Delete">
                                                 <i class="fas fa-trash"></i>
-                                            </a>
+                                            </button>
                                         <?php else: ?>
                                             <button class="btn btn-sm btn-secondary" disabled title="Cannot delete main branch">
                                                 <i class="fas fa-trash"></i>

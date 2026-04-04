@@ -56,6 +56,14 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
+        .mark {
+            background-color: #ffeb3b;
+            padding: 0 4px;
+            border-radius: 3px;
+            font-weight: bold;
+            color: #000;
+        }
+
         footer {
             background: white;
             padding: 15px;
