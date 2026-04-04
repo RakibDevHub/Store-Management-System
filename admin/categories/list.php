@@ -30,6 +30,41 @@ $result = $conn->query($sql);
 include '../../includes/header.php';
 ?>
 
+<script>
+    // Delete confirmation with SweetAlert
+    function confirmDelete(categoryId, categoryName, productCount) {
+        let message = `You are about to delete "${categoryName}".`;
+        
+        if (productCount > 0) {
+            message = `Cannot delete "${categoryName}" because it has ${productCount} product(s) associated with it.`;
+            Swal.fire({
+                title: 'Cannot Delete!',
+                text: message,
+                icon: 'warning',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'OK'
+            });
+            return false;
+        }
+        
+        Swal.fire({
+            title: 'Are you sure?',
+            text: `You are about to delete "${categoryName}". This action cannot be undone!`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `delete.php?id=${categoryId}`;
+            }
+        });
+        return false;
+    }
+</script>
+
 <div class="card shadow-sm">
     <div class="card-header bg-white">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -102,6 +137,9 @@ include '../../includes/header.php';
                                 // Highlight search term in description
                                 $description = preg_replace('/(' . preg_quote($search, '/') . ')/i', '<mark>$1</mark>', $description);
                             }
+                            
+                            $js_category_name = addslashes($row['category_name']);
+                            $product_count = $row['product_count'];
                         ?>
                             <tr>
                                 <td><?php echo $row['category_id']; ?></td>
@@ -116,7 +154,7 @@ include '../../includes/header.php';
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <span class="badge bg-primary"><?php echo $row['product_count']; ?> Products</span>
+                                    <span class="badge bg-primary"><?php echo $product_count; ?> Products</span>
                                 </td>
                                 <td>
                                     <span class="badge bg-info"><?php echo $row['branch_count']; ?> Branches</span>
@@ -127,15 +165,9 @@ include '../../includes/header.php';
                                         <a href="edit.php?id=<?php echo $row['category_id']; ?>" class="btn btn-sm btn-primary" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <?php if ($row['product_count'] == 0): ?>
-                                            <a href="delete.php?id=<?php echo $row['category_id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this category?')" title="Delete">
-                                                <i class="fas fa-trash"></i>
-                                            </a>
-                                        <?php else: ?>
-                                            <button class="btn btn-sm btn-secondary" disabled title="Cannot delete - Category has products">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        <?php endif; ?>
+                                        <button onclick="confirmDelete(<?php echo $row['category_id']; ?>, '<?php echo $js_category_name; ?>', <?php echo $product_count; ?>)" class="btn btn-sm btn-danger" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>

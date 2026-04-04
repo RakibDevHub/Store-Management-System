@@ -46,12 +46,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $stmt->bind_param("ssi", $category_name, $description, $id);
             
             if ($stmt->execute()) {
+                // Log activity
                 logActivity($_SESSION['user_id'], 'Edit Category', "Edited category: $category_name");
+                
+                // Set flash message
+                $_SESSION['flash_message'] = [
+                    'type' => 'success',
+                    'title' => 'Success!',
+                    'text' => "Category '$category_name' has been updated successfully."
+                ];
+                
                 redirect('list.php');
             } else {
                 $error = "Error: " . $conn->error;
             }
         }
+        $check_stmt->close();
     }
 }
 

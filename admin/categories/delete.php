@@ -26,15 +26,41 @@ if ($id > 0) {
         $category = $stmt->get_result()->fetch_assoc();
         
         if ($category) {
-            logActivity($_SESSION['user_id'], 'Delete Category', "Deleted category: " . $category['category_name']);
+            $category_name = $category['category_name'];
+            
+            // Log activity
+            logActivity($_SESSION['user_id'], 'Delete Category', "Deleted category: " . $category_name);
             
             // Delete category
             $sql = "DELETE FROM categories WHERE category_id = ?";
             $stmt = $conn->prepare($sql);
             $stmt->bind_param("i", $id);
-            $stmt->execute();
+            
+            if ($stmt->execute()) {
+                // Set flash message
+                $_SESSION['flash_message'] = [
+                    'type' => 'success',
+                    'title' => 'Deleted!',
+                    'text' => "Category '$category_name' has been deleted successfully."
+                ];
+            } else {
+                $_SESSION['flash_message'] = [
+                    'type' => 'error',
+                    'title' => 'Error!',
+                    'text' => "Failed to delete category."
+                ];
+            }
+            $stmt->close();
         }
+    } else {
+        // Category has products - cannot delete
+        $_SESSION['flash_message'] = [
+            'type' => 'warning',
+            'title' => 'Cannot Delete!',
+            'text' => "This category has {$count['product_count']} product(s) associated with it. Please reassign or delete those products first."
+        ];
     }
+    $check_stmt->close();
 }
 
 redirect('list.php');

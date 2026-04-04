@@ -7,7 +7,6 @@ if (!isAdmin()) {
 }
 
 $error = '';
-$success = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $category_name = sanitize($_POST['category_name']);
@@ -30,12 +29,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $stmt->bind_param("ss", $category_name, $description);
             
             if ($stmt->execute()) {
+                // Log activity
                 logActivity($_SESSION['user_id'], 'Add Category', "Added new category: $category_name");
+                
+                // Set flash message
+                $_SESSION['flash_message'] = [
+                    'type' => 'success',
+                    'title' => 'Success!',
+                    'text' => "Category '$category_name' has been added successfully."
+                ];
+                
                 redirect('list.php');
             } else {
                 $error = "Error: " . $conn->error;
             }
         }
+        $check_stmt->close();
     }
 }
 
@@ -60,7 +69,7 @@ include '../../includes/header.php';
                     <label class="form-label">Category Name <span class="text-danger">*</span></label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-tag"></i></span>
-                        <input type="text" name="category_name" class="form-control" required autofocus>
+                        <input type="text" name="category_name" class="form-control" value="<?php echo isset($_POST['category_name']) ? htmlspecialchars($_POST['category_name']) : ''; ?>" required autofocus>
                     </div>
                     <small class="text-muted">Example: Electronics, Clothing, Groceries</small>
                 </div>
@@ -69,7 +78,7 @@ include '../../includes/header.php';
                     <label class="form-label">Description</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-align-left"></i></span>
-                        <textarea name="description" class="form-control" rows="3" placeholder="Enter category description..."></textarea>
+                        <textarea name="description" class="form-control" rows="3" placeholder="Enter category description..."><?php echo isset($_POST['description']) ? htmlspecialchars($_POST['description']) : ''; ?></textarea>
                     </div>
                     <small class="text-muted">Optional: Describe what this category includes</small>
                 </div>
