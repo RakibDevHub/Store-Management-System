@@ -323,6 +323,21 @@
                         </li>
 
                         <?php if (isAdmin()): ?>
+
+                            <!-- Low Stock Report -->
+                            <li class="nav-item">
+                                <a class="nav-link" href="/reports/low_stock.php">
+                                    <i class="fas fa-exclamation-triangle"></i> Stock Report
+                                    <?php
+                                    // Show badge with count
+                                    $low_stock_count = $conn->query("SELECT COUNT(*) as count FROM products WHERE quantity <= reorder_level")->fetch_assoc()['count'];
+                                    if ($low_stock_count > 0):
+                                    ?>
+                                        <span class="badge bg-danger rounded-pill ms-2"><?php echo $low_stock_count; ?></span>
+                                    <?php endif; ?>
+                                </a>
+                            </li>
+
                             <li class="nav-item">
                                 <a class="nav-link" href="/admin/users/list.php">
                                     <i class="fas fa-users"></i> Users
