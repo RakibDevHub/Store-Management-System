@@ -59,6 +59,7 @@ include '../../includes/header.php';
                 </div>
             </form>
 
+            <!-- Search Result Info -->
             <?php if (!empty($search)): ?>
                 <div class="mt-2">
                     <small class="text-muted">
@@ -69,6 +70,7 @@ include '../../includes/header.php';
             <?php endif; ?>
         </div>
 
+        <!-- Categories Table -->
         <div class="table-responsive">
             <table class="table table-hover mb-0">
                 <thead class="table-dark">
@@ -115,9 +117,20 @@ include '../../includes/header.php';
             </table>
         </div>
 
-        <div class="mt-3 alert alert-info">
-            <i class="fas fa-info-circle me-2"></i>
-            <small>Categories are managed by Admin. You can only view categories that have products in your branch.</small>
+        <!-- Info Message -->
+        <div class="mt-3 p-3 bg-light rounded border">
+            <div class="d-flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-info-circle text-primary fa-lg"></i>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                    <strong class="text-primary">Information</strong><br>
+                    <small class="text-muted">
+                        Categories are managed by Admin. You can only view categories that have products in your branch.
+                        If you need to add or modify categories, please contact your branch administrator.
+                    </small>
+                </div>
+            </div>
         </div>
     </div>
 </div>
