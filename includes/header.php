@@ -271,7 +271,7 @@
                             </li>
                         <?php else: ?>
                             <li class="nav-item">
-                                <a class="nav-link" href="staff/categories/list.php">
+                                <a class="nav-link" href="/staff/categories/list.php">
                                     <i class="fas fa-tags"></i> Categories
                                 </a>
                             </li>
