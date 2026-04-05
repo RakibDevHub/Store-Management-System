@@ -116,35 +116,39 @@ include 'includes/header.php';
 </div>
 
 <!-- Quick Actions -->
-<h5 class="mb-3"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+<h5 class="mb-3">
+    <i class="fas fa-bolt me-2"></i>Quick Actions
+</h5>
 <div class="row">
+    <!-- Record Sale -->
     <div class="col-md-4 mb-3">
         <?php if ($is_admin): ?>
-            <a href="/admin/sales/add.php" class="text-decoration-none">
+            <a href="admin/sales/add.php" class="text-decoration-none">
                 <div class="card text-center h-100 shadow-sm hover-card">
                     <div class="card-body">
                         <i class="fas fa-shopping-cart fa-3x text-primary mb-3"></i>
                         <h5 class="card-title">Record Sale</h5>
-                        <p class="card-text small text-muted">Add new sales transaction</p>
+                        <p class="card-text small text-muted">Record new sales transaction</p>
                     </div>
                 </div>
             </a>
         <?php else: ?>
-            <a href="/staff/sales/add.php" class="text-decoration-none">
+            <a href="staff/sales/add.php" class="text-decoration-none">
                 <div class="card text-center h-100 shadow-sm hover-card">
                     <div class="card-body">
                         <i class="fas fa-shopping-cart fa-3x text-primary mb-3"></i>
                         <h5 class="card-title">Record Sale</h5>
-                        <p class="card-text small text-muted">Add new sales transaction</p>
+                        <p class="card-text small text-muted">Record new sales transaction</p>
                     </div>
                 </div>
             </a>
         <?php endif; ?>
     </div>
 
+    <!-- Add Product -->
     <div class="col-md-4 mb-3">
         <?php if ($is_admin): ?>
-            <a href="/admin/products/add.php" class="text-decoration-none">
+            <a href="admin/products/add.php" class="text-decoration-none">
                 <div class="card text-center h-100 shadow-sm hover-card">
                     <div class="card-body">
                         <i class="fas fa-plus-circle fa-3x text-success mb-3"></i>
@@ -154,7 +158,7 @@ include 'includes/header.php';
                 </div>
             </a>
         <?php else: ?>
-            <a href="/staff/products/add.php" class="text-decoration-none">
+            <a href="staff/products/add.php" class="text-decoration-none">
                 <div class="card text-center h-100 shadow-sm hover-card">
                     <div class="card-body">
                         <i class="fas fa-plus-circle fa-3x text-success mb-3"></i>
@@ -166,16 +170,81 @@ include 'includes/header.php';
         <?php endif; ?>
     </div>
 
+    <!-- Add Category (Admin Only) -->
+    <?php if ($is_admin): ?>
+        <div class="col-md-4 mb-3">
+            <a href="admin/categories/add.php" class="text-decoration-none">
+                <div class="card text-center h-100 shadow-sm hover-card">
+                    <div class="card-body">
+                        <i class="fas fa-building fa-3x text-danger mb-3"></i>
+                        <h5 class="card-title">Add Branch</h5>
+                        <p class="card-text small text-muted">Add new branch</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4 mb-3">
+            <a href="admin/categories/add.php" class="text-decoration-none">
+                <div class="card text-center h-100 shadow-sm hover-card">
+                    <div class="card-body">
+                        <i class="fas fa-tags fa-3x text-warning mb-3"></i>
+                        <h5 class="card-title">Add Category</h5>
+                        <p class="card-text small text-muted">Add new product category</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    <?php else: ?>
+        <!-- View Products (Staff) -->
+        <div class="col-md-4 mb-3">
+            <a href="staff/products/list.php" class="text-decoration-none">
+                <div class="card text-center h-100 shadow-sm hover-card">
+                    <div class="card-body">
+                        <i class="fas fa-boxes fa-3x text-info mb-3"></i>
+                        <h5 class="card-title">View Products</h5>
+                        <p class="card-text small text-muted">View products in your branch</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    <?php endif; ?>
+
+    <!-- View Sales Report (Both) -->
     <div class="col-md-4 mb-3">
         <a href="reports/sales_report.php" class="text-decoration-none">
             <div class="card text-center h-100 shadow-sm hover-card">
                 <div class="card-body">
                     <i class="fas fa-chart-line fa-3x text-info mb-3"></i>
-                    <h5 class="card-title">View Reports</h5>
-                    <p class="card-text small text-muted">Analyze sales performance</p>
+                    <h5 class="card-title">Sales Report</h5>
+                    <p class="card-text small text-muted">View sales analytics</p>
                 </div>
             </div>
         </a>
+    </div>
+
+    <!-- View Sales List (Both) -->
+    <div class="col-md-4 mb-3">
+        <?php if ($is_admin): ?>
+            <a href="admin/sales/list.php" class="text-decoration-none">
+                <div class="card text-center h-100 shadow-sm hover-card">
+                    <div class="card-body">
+                        <i class="fas fa-list fa-3x text-secondary mb-3"></i>
+                        <h5 class="card-title">Sales List</h5>
+                        <p class="card-text small text-muted">View all sales records</p>
+                    </div>
+                </div>
+            </a>
+        <?php else: ?>
+            <a href="staff/sales/list.php" class="text-decoration-none">
+                <div class="card text-center h-100 shadow-sm hover-card">
+                    <div class="card-body">
+                        <i class="fas fa-list fa-3x text-secondary mb-3"></i>
+                        <h5 class="card-title">Sales List</h5>
+                        <p class="card-text small text-muted">View your branch sales</p>
+                    </div>
+                </div>
+            </a>
+        <?php endif; ?>
     </div>
 </div>
 
