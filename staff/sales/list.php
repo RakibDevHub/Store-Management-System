@@ -55,39 +55,57 @@ include '../../includes/header.php';
         <!-- Filter Form -->
         <form method="GET" action="" class="mb-3">
             <div class="row g-2">
-                <div class="col-md-4">
+                <div class="col-md-6">
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-search"></i></span>
                         <input type="text" name="search" class="form-control"
                             placeholder="Search by invoice or product..."
                             value="<?php echo htmlspecialchars($search); ?>">
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <input type="date" name="from_date" class="form-control" value="<?php echo $from_date; ?>" placeholder="From Date">
-                </div>
-                <div class="col-md-3">
-                    <input type="date" name="to_date" class="form-control" value="<?php echo $to_date; ?>" placeholder="To Date">
-                </div>
-                <div class="col-md-2">
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary flex-grow-1">
-                            <i class="fas fa-filter me-1"></i>Filter
-                        </button>
                         <?php if (!empty($search) || !empty($from_date) || !empty($to_date)): ?>
-                            <a href="list.php" class="btn btn-outline-danger">
-                                <i class="fas fa-times"></i>
+                            <a href="list.php" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Clear
                             </a>
                         <?php endif; ?>
                     </div>
                 </div>
+                <div class="col-md-2">
+                    <input type="date" name="from_date" class="form-control" value="<?php echo $from_date; ?>" placeholder="From Date">
+                </div>
+                <div class="col-md-2">
+                    <input type="date" name="to_date" class="form-control" value="<?php echo $to_date; ?>" placeholder="To Date">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-1"></i>Filter
+                    </button>
+                </div>
             </div>
         </form>
+
+        <!-- Active Filters Display -->
+        <?php if (!empty($search) || !empty($from_date) || !empty($to_date)): ?>
+            <div class="mb-3">
+                <small class="text-muted">
+                    <i class="fas fa-filter me-1"></i>
+                    Active filters:
+                    <?php if (!empty($search)): ?>
+                        <span class="badge bg-secondary">Search: "<?php echo htmlspecialchars($search); ?>"</span>
+                    <?php endif; ?>
+                    <?php if (!empty($from_date)): ?>
+                        <span class="badge bg-secondary">From: <?php echo htmlspecialchars($from_date); ?></span>
+                    <?php endif; ?>
+                    <?php if (!empty($to_date)): ?>
+                        <span class="badge bg-secondary">To: <?php echo htmlspecialchars($to_date); ?></span>
+                    <?php endif; ?>
+                    (<?php echo $total_sales; ?> results found)
+                </small>
+            </div>
+        <?php endif; ?>
 
         <!-- Summary Cards -->
         <div class="row mb-4">
             <div class="col-md-6">
-                <div class="card bg-primary text-white">
+                <div class="card bg-primary text-white stats-card">
                     <div class="card-body">
                         <h6 class="card-title">Total Transactions</h6>
                         <h3 class="mb-0"><?php echo $total_sales; ?></h3>
@@ -95,7 +113,7 @@ include '../../includes/header.php';
                 </div>
             </div>
             <div class="col-md-6">
-                <div class="card bg-success text-white">
+                <div class="card bg-success text-white stats-card">
                     <div class="card-body">
                         <h6 class="card-title">Total Revenue</h6>
                         <h3 class="mb-0">৳<?php echo number_format($total_revenue, 2); ?></h3>
@@ -172,5 +190,16 @@ include '../../includes/header.php';
         </div>
     </div>
 </div>
+
+<style>
+    .stats-card {
+        transition: transform 0.3s;
+        cursor: pointer;
+    }
+
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+</style>
 
 <?php include '../../includes/footer.php'; ?>

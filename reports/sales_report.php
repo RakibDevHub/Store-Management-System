@@ -11,11 +11,10 @@ $branch_filter = isset($_GET['branch_id']) ? intval($_GET['branch_id']) : 0;
 $from_date = '';
 $to_date = '';
 
-// Handle custom date range from POST/GET
+// Handle custom date range
 if (isset($_GET['from_date']) && isset($_GET['to_date']) && !empty($_GET['from_date']) && !empty($_GET['to_date'])) {
     $from_date = $_GET['from_date'];
     $to_date = $_GET['to_date'];
-    $filter = '';
 } else {
     // Set date range based on quick filter
     switch ($filter) {
@@ -148,6 +147,9 @@ include '../includes/header.php';
                     </a>
                 </div>
             </div>
+            
+            <!-- Preserve filter value when submitting -->
+            <input type="hidden" name="filter" id="hiddenFilter" value="<?php echo $filter; ?>">
         </form>
 
         <!-- Summary Cards -->
@@ -279,10 +281,10 @@ include '../includes/header.php';
                                         <td colspan="6" class="text-end fw-bold">Grand Total:</td>
                                         <td colspan="3" class="fw-bold">৳<?php echo number_format($total_amount, 2); ?></td>
                                     <?php else: ?>
-                                        <td colspan="5" class="text-end fw-bold">Grand Total:</td
-                                            <td colspan="3" class="fw-bold">৳<?php echo number_format($total_amount, 2); ?></td
-                                            <?php endif; ?>
-                                            </tr>
+                                        <td colspan="5" class="text-end fw-bold">Grand Total:</td>
+                                        <td colspan="3" class="fw-bold">৳<?php echo number_format($total_amount, 2); ?></td>
+                                    <?php endif; ?>
+                                </tr>
                             </tfoot>
                         <?php endif; ?>
                     </table>
@@ -323,19 +325,19 @@ include '../includes/header.php';
                 fromDate = formatDate(firstDay);
                 toDate = formatDate(lastDay);
                 break;
+            default:
+                return;
         }
 
+        // Set the date inputs
         document.getElementById('from_date').value = fromDate;
         document.getElementById('to_date').value = toDate;
-
-        // Create hidden inputs to preserve filter type
-        const form = document.getElementById('reportForm');
-        const hiddenFilter = document.createElement('input');
-        hiddenFilter.type = 'hidden';
-        hiddenFilter.name = 'filter';
-        hiddenFilter.value = filter;
-        form.appendChild(hiddenFilter);
-        form.submit();
+        
+        // Set the hidden filter value
+        document.getElementById('hiddenFilter').value = filter;
+        
+        // Submit the form
+        document.getElementById('reportForm').submit();
     });
 </script>
 
@@ -344,11 +346,9 @@ include '../includes/header.php';
         transition: transform 0.3s;
         cursor: pointer;
     }
-
     .stats-card:hover {
         transform: translateY(-5px);
     }
-
     .progress {
         border-radius: 10px;
         overflow: hidden;
