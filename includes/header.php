@@ -225,8 +225,8 @@
                             <i class="fas fa-user-circle"></i> <?php echo $_SESSION['first_name'] . ' ' . $_SESSION['last_name']; ?>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#">
-                                    <i class="fas fa-user"></i> Profile
+                            <li><a class="dropdown-item" href="/settings.php">
+                                    <i class="fas fa-cog"></i> Settings
                                 </a></li>
                             <li>
                                 <hr class="dropdown-divider">
@@ -329,6 +329,7 @@
                                 </a>
                             </li>
                         <?php endif; ?>
+
                         <!-- Activity Logs (Admin Only) -->
                         <?php if (isAdmin()): ?>
                             <li class="nav-item">
