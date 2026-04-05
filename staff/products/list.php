@@ -2,7 +2,6 @@
 require_once '../../includes/auth.php';
 require_once '../../includes/functions.php';
 
-// Staff can only see their branch products
 $branch_id = getUserBranch();
 $search = isset($_GET['search']) ? sanitize($_GET['search']) : '';
 $category_filter = isset($_GET['category_id']) ? intval($_GET['category_id']) : 0;
@@ -47,6 +46,27 @@ $categories = $conn->query("SELECT DISTINCT c.* FROM categories c
 include '../../includes/header.php';
 ?>
 
+<script>
+    // Delete confirmation with SweetAlert
+    function confirmDelete(productId, productName) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: `You are about to delete "${productName}". This action cannot be undone!`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = `delete.php?id=${productId}`;
+            }
+        });
+        return false;
+    }
+</script>
+
 <div class="card shadow-sm">
     <div class="card-header bg-white">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -67,6 +87,11 @@ include '../../includes/header.php';
                         <input type="text" name="search" class="form-control"
                             placeholder="Search by name, code, or category..."
                             value="<?php echo htmlspecialchars($search); ?>">
+                        <?php if (!empty($search) || $category_filter > 0 || !empty($stock_filter)): ?>
+                            <a href="list.php" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Clear
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -91,19 +116,36 @@ include '../../includes/header.php';
                     </select>
                 </div>
                 <div class="col-md-2">
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary flex-grow-1">
-                            <i class="fas fa-filter me-1"></i>Filter
-                        </button>
-                        <?php if (!empty($search) || $category_filter > 0 || !empty($stock_filter)): ?>
-                            <a href="list.php" class="btn btn-outline-danger">
-                                <i class="fas fa-times"></i>
-                            </a>
-                        <?php endif; ?>
-                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-1"></i>Filter
+                    </button>
                 </div>
             </div>
         </form>
+
+        <!-- Active Filters Display -->
+        <?php if (!empty($search) || $category_filter > 0 || !empty($stock_filter)): ?>
+            <div class="mb-3">
+                <small class="text-muted">
+                    <i class="fas fa-filter me-1"></i>
+                    Active filters:
+                    <?php if (!empty($search)): ?>
+                        <span class="badge bg-secondary">Search: "<?php echo htmlspecialchars($search); ?>"</span>
+                    <?php endif; ?>
+                    <?php if ($category_filter > 0): ?>
+                        <span class="badge bg-secondary">Category filter applied</span>
+                    <?php endif; ?>
+                    <?php if ($stock_filter == 'in'): ?>
+                        <span class="badge bg-secondary">In Stock only</span>
+                    <?php elseif ($stock_filter == 'low'): ?>
+                        <span class="badge bg-secondary">Low Stock only</span>
+                    <?php elseif ($stock_filter == 'out'): ?>
+                        <span class="badge bg-secondary">Out of Stock only</span>
+                    <?php endif; ?>
+                    (<?php echo $result->num_rows; ?> results found)
+                </small>
+            </div>
+        <?php endif; ?>
 
         <div class="table-responsive">
             <table class="table table-hover mb-0">
@@ -138,6 +180,8 @@ include '../../includes/header.php';
                                 $stock_status = 'In Stock';
                                 $status_class = 'badge bg-success';
                             }
+
+                            $js_product_name = addslashes($row['product_name']);
                         ?>
                             <tr>
                                 <td><?php echo $row['product_id']; ?></td>
@@ -154,9 +198,9 @@ include '../../includes/header.php';
                                         <a href="edit.php?id=<?php echo $row['product_id']; ?>" class="btn btn-sm btn-primary" title="Edit">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <a href="delete.php?id=<?php echo $row['product_id']; ?>" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this product?')" title="Delete">
+                                        <button onclick="confirmDelete(<?php echo $row['product_id']; ?>, '<?php echo $js_product_name; ?>')" class="btn btn-sm btn-danger" title="Delete">
                                             <i class="fas fa-trash"></i>
-                                        </a>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
