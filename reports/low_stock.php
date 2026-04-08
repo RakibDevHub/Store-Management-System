@@ -8,7 +8,7 @@ if (!isAdmin()) {
 
 $branch_filter = isset($_GET['branch_id']) ? intval($_GET['branch_id']) : 0;
 
-// Build query for low stock products
+// Query for low stock products
 $sql = "SELECT p.*, c.category_name, b.branch_name 
         FROM products p 
         LEFT JOIN categories c ON p.category_id = c.category_id 
