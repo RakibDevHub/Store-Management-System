@@ -72,18 +72,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 // Log activity
                 logActivity($_SESSION['user_id'], 'Edit Product', "Edited product: $product_name");
 
-                // Add stock movement if quantity changed
-                if ($quantity_diff != 0) {
-                    $movement_type = ($quantity_diff > 0) ? 'adjustment' : 'adjustment';
-                    $abs_diff = abs($quantity_diff);
-                    $movement_sql = "INSERT INTO stock_movements (product_id, branch_id, movement_type, quantity, previous_quantity, new_quantity, notes, created_by) 
-                                     VALUES (?, ?, ?, ?, ?, ?, 'Stock adjustment by staff', ?)";
-                    $movement_stmt = $conn->prepare($movement_sql);
-                    $movement_stmt->bind_param("iisiiii", $id, $branch_id, $movement_type, $abs_diff, $product['quantity'], $quantity, $_SESSION['user_id']);
-                    $movement_stmt->execute();
-                    $movement_stmt->close();
-                }
-
                 // Set flash message
                 $_SESSION['flash_message'] = [
                     'type' => 'success',

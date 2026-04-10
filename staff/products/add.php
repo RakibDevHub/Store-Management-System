@@ -40,16 +40,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 // Log activity
                 logActivity($_SESSION['user_id'], 'Add Product', "Added product: $product_name to branch: " . $_SESSION['branch_name']);
 
-                // Add stock movement if quantity > 0
-                if ($quantity > 0) {
-                    $movement_sql = "INSERT INTO stock_movements (product_id, branch_id, movement_type, quantity, previous_quantity, new_quantity, notes, created_by) 
-                                     VALUES (?, ?, 'purchase', ?, 0, ?, 'Initial stock', ?)";
-                    $movement_stmt = $conn->prepare($movement_sql);
-                    $movement_stmt->bind_param("iiiii", $stmt->insert_id, $branch_id, $quantity, $quantity, $_SESSION['user_id']);
-                    $movement_stmt->execute();
-                    $movement_stmt->close();
-                }
-
                 // Set flash message
                 $_SESSION['flash_message'] = [
                     'type' => 'success',

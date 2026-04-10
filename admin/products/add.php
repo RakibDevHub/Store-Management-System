@@ -52,19 +52,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 // Log activity
                 logActivity($_SESSION['user_id'], 'Add Product', "Added product: $product_name (Code: $product_code) to branch ID: $branch_id");
 
-                // Record stock movement if quantity > 0
-                if ($quantity > 0) {
-                    $movement_sql = "INSERT INTO stock_movements (product_id, branch_id, movement_type, quantity, previous_quantity, new_quantity, notes, created_by) 
-                                     VALUES (?, ?, 'purchase', ?, 0, ?, 'Initial stock on product creation', ?)";
-                    $movement_stmt = $conn->prepare($movement_sql);
-                    $movement_stmt->bind_param("iiiii", $product_id, $branch_id, $quantity, $quantity, $_SESSION['user_id']);
-
-                    if (!$movement_stmt->execute()) {
-                        error_log("Failed to record stock movement: " . $movement_stmt->error);
-                    }
-                    $movement_stmt->close();
-                }
-
                 $stmt->close();
                 $check_stmt->close();
 

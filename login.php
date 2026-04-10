@@ -126,13 +126,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <i class="fas fa-sign-in-alt me-2"></i>Login
                             </button>
                         </form>
-                        
-                        <div class="demo-info mt-4">
-                            <p class="mb-1"><i class="fas fa-info-circle me-2"></i>Demo Credentials:</p>
-                            <hr class="my-2">
-                            <p class="mb-1"><strong>Admin:</strong> admin@store.com / password123</p>
-                            <p class="mb-0"><strong>Staff:</strong> mostafa@store.com / password123</p>
-                        </div>
                     </div>
                 </div>
             </div>

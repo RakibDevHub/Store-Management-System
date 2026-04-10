@@ -137,7 +137,7 @@ include '../includes/header.php';
                                 </td>
                                 <td><span class="badge <?php echo $status_class; ?>"><?php echo $status_text; ?></span></td>
                                 <td>
-                                    <a href="../products/edit.php?id=<?php echo $row['product_id']; ?>" class="btn btn-sm btn-primary">
+                                    <a href="../admin/products/edit.php?id=<?php echo $row['product_id']; ?>" class="btn btn-sm btn-primary">
                                         <i class="fas fa-edit"></i> Update Stock
                                     </a>
                                 </td>
