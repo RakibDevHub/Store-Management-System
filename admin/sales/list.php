@@ -37,9 +37,14 @@ include '../../includes/header.php';
 <div class="card shadow-sm">
     <div class="card-header bg-white d-flex justify-content-between align-items-center">
         <h5 class="mb-0"><i class="fas fa-list me-2"></i>Sales List (All Branches)</h5>
-        <a href="add.php" class="btn btn-sm btn-success">
-            <i class="fas fa-plus me-1"></i>New Sale
-        </a>
+        <div class="d-flex gap-2">
+            <a href="add.php" class="btn btn-sm btn-success">
+                <i class="fas fa-plus me-1"></i> New Sale
+            </a>
+            <a href="/reports/sales_report.php" class="btn btn-sm btn-primary">
+                <i class="fas fa-chart-line me-1"></i> Sales Report
+            </a>
+        </div>
     </div>
     <div class="card-body">
         <!-- Filter Form -->

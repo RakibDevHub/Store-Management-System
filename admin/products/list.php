@@ -81,9 +81,18 @@ include '../../includes/header.php';
     <div class="card-header bg-white">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h5 class="mb-0"><i class="fas fa-boxes me-2"></i>All Products</h5>
-            <a href="add.php" class="btn btn-sm btn-success">
-                <i class="fas fa-plus me-1"></i>Add Product
-            </a>
+
+            <div class="d-flex gap-2">
+                <a href="add.php" class="btn btn-sm btn-success">
+                    <i class="fas fa-plus me-1"></i>Add Product
+                </a>
+                <a href="/reports/low_stock.php" class="btn btn-sm btn-danger">
+                    <i class="fas fa-exclamation-triangle"></i> Stock Report
+                </a>
+            </div>
+
+
+
         </div>
     </div>
 
