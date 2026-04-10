@@ -137,7 +137,7 @@ include '../../includes/header.php';
                 <i class="fas fa-save me-1"></i>Record Sale
             </button>
             <a href="list.php" class="btn btn-secondary">
-                <i class="fas fa-list me-1"></i>View Sales
+                <i class="fas fa-times me-1"></i>Cancle
             </a>
         </form>
     </div>

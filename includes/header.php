@@ -293,34 +293,17 @@
 
                         <?php if (isAdmin()): ?>
                             <li class="nav-item">
-                                <a class="nav-link" href="/admin/sales/add.php">
-                                    <i class="fas fa-shopping-cart"></i> Record Sale
-                                </a>
-                            </li>
-                            <li class="nav-item">
                                 <a class="nav-link" href="/admin/sales/list.php">
-                                    <i class="fas fa-list"></i> Sales List
+                                    <i class="fas fa-shopping-cart"></i> Sales
                                 </a>
                             </li>
                         <?php else: ?>
                             <li class="nav-item">
-                                <a class="nav-link" href="/staff/sales/add.php">
-                                    <i class="fas fa-shopping-cart"></i> Record Sale
-                                </a>
-                            </li>
-                            <li class="nav-item">
                                 <a class="nav-link" href="/staff/sales/list.php">
-                                    <i class="fas fa-list"></i> Sales List
+                                    <i class="fas fa-shopping-cart"></i> Sales
                                 </a>
                             </li>
                         <?php endif; ?>
-
-                        <!-- Reports (Both) -->
-                        <li class="nav-item">
-                            <a class="nav-link" href="/reports/sales_report.php">
-                                <i class="fas fa-chart-line"></i> Sales Report
-                            </a>
-                        </li>
 
                         <?php if (isAdmin()): ?>
 
